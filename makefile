@@ -1,16 +1,20 @@
-
 C = gcc
 CPP = g++
 LIB_DIR = ./lib
 INCLUDE_DIR = ./include
 
-all: Application clean
+SRCS = $(wildcard src/*.cpp)
+OBJS = $(SRCS:.cpp=.o)
 
-Application: main.o
-	$(CPP) main.o -o Application -L$(LIB_DIR) -lglfw -lglew -lopengl32 -lgdi32
+CXXFLAGS = -I $(INCLUDE_DIR) -std=c++17
 
-main.o: main.cpp 
-	$(CPP) -c main.cpp -I $(INCLUDE_DIR)
+all: Application
+
+Application: $(OBJS)
+	$(CPP) $(OBJS) -o Application -L$(LIB_DIR) -lglfw -lglew -lopengl32 -lgdi32
+
+%.o: %.cpp
+	$(CPP) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm.exe -f *.o
+	rm.exe -f $(OBJS)
