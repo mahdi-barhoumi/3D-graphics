@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <object.hpp>
+#include <utils.hpp>
 
 using namespace std;
 using namespace glm;
@@ -13,67 +14,30 @@ object::object(filesystem::path modelFilePath)
     scale(vec3(1, 1, 1)), position(vec3(0, 0, 0)), rotation(vec3(0, 0, 0)),
     scalingMatrix(mat4(1)), rotationMatrix(mat4(1)), translationMatrix(mat4(1)), modelMatrix(mat4(1))
 {
-    ifstream modelFile(modelFilePath, ios::in);
-    if (modelFile && modelFilePath.extension().string() == ".obj") {
-        string line;
-        while (getline(modelFile, line)) {
-            float x, y, z;
-            unsigned int v1, vt1, vn1, v2, vt2, vn2, v3, vt3, vn3;
-            if (sscanf(line.c_str(), "v %f %f %f", &x, &y, &z) == 3) {
-                vertexPositions.push_back(vec3(x, y, z));
-            }
-            else if (sscanf(line.c_str(), "vt %f %f", &x, &y) == 2) {
-                vertexTextureCoordinates.push_back(vec2(x, y));
-            }
-            else if (sscanf(line.c_str(), "vn %f %f %f", &x, &y, &z) == 3) {
-                vertexNormals.push_back(vec3(x, y, z));
-            }
-            else if (sscanf(line.c_str(), "f %u/%u/%u %u/%u/%u %u/%u/%u", &v1, &vt1, &vn1, &v2, &vt2, &vn2, &v3, &vt3, &vn3) == 9) {
-                vertexIndices.push_back(uvec3(v1, vt1, vn1));
-                vertexIndices.push_back(uvec3(v2, vt2, vn2));
-                vertexIndices.push_back(uvec3(v3, vt3, vn3));
-            }
-            else if (sscanf(line.c_str(), "f %u//%u %u//%u %u//%u", &v1, &vn1, &v2, &vn2, &v3, &vn3) == 6) {
-                vertexIndices.push_back(uvec3(v1, 0, vn1));
-                vertexIndices.push_back(uvec3(v2, 0, vn2));
-                vertexIndices.push_back(uvec3(v3, 0, vn3));
-            }
-            else if (sscanf(line.c_str(), "f %u %u %u", &v1, &v2, &v3) == 3) {
-                vertexIndices.push_back(uvec3(v1, 0, 0));
-                vertexIndices.push_back(uvec3(v2, 0, 0));
-                vertexIndices.push_back(uvec3(v3, 0, 0));
-            }
+    parseOBJFile(modelFilePath, vertexPositions, vertexTextureCoordinates, vertexNormals, vertexIndices);
+    for (unsigned int i = 0; i < vertexIndices.size(); i++) {
+        indexBuffer.push_back(i);
+        vertexBuffer.push_back(vertexPositions[vertexIndices[i].x - 1].x);
+        vertexBuffer.push_back(vertexPositions[vertexIndices[i].x - 1].y);
+        vertexBuffer.push_back(vertexPositions[vertexIndices[i].x - 1].z);
+        if (vertexIndices[i].y > 0) {
+            vertexBuffer.push_back(vertexTextureCoordinates[vertexIndices[i].y - 1].s);
+            vertexBuffer.push_back(vertexTextureCoordinates[vertexIndices[i].y - 1].t);
         }
-        for (unsigned int i = 0; i < vertexIndices.size(); i++) {
-            indexBuffer.push_back(i);
-            vertexBuffer.push_back(vertexPositions[vertexIndices[i].x - 1].x);
-            vertexBuffer.push_back(vertexPositions[vertexIndices[i].x - 1].y);
-            vertexBuffer.push_back(vertexPositions[vertexIndices[i].x - 1].z);
-            if (vertexIndices[i].y > 0) {
-                vertexBuffer.push_back(vertexTextureCoordinates[vertexIndices[i].y - 1].s);
-                vertexBuffer.push_back(vertexTextureCoordinates[vertexIndices[i].y - 1].t);
-            }
-            else {
-                vertexBuffer.push_back(0);
-                vertexBuffer.push_back(0);
-            }
-            if (vertexIndices[i].z > 0) {
-                vertexBuffer.push_back(vertexNormals[vertexIndices[i].z - 1].x);
-                vertexBuffer.push_back(vertexNormals[vertexIndices[i].z - 1].y);
-                vertexBuffer.push_back(vertexNormals[vertexIndices[i].z - 1].z);
-            }
-            else {
-                vertexBuffer.push_back(0);
-                vertexBuffer.push_back(0);
-                vertexBuffer.push_back(0);
-            }
+        else {
+            vertexBuffer.push_back(0);
+            vertexBuffer.push_back(0);
         }
-        modelFile.close();
-    }
-    else {
-        cout << "Error: Could not open model file " << modelFilePath.filename().string() << endl;
-        modelFile.close();
-        exit(-1);
+        if (vertexIndices[i].z > 0) {
+            vertexBuffer.push_back(vertexNormals[vertexIndices[i].z - 1].x);
+            vertexBuffer.push_back(vertexNormals[vertexIndices[i].z - 1].y);
+            vertexBuffer.push_back(vertexNormals[vertexIndices[i].z - 1].z);
+        }
+        else {
+            vertexBuffer.push_back(0);
+            vertexBuffer.push_back(0);
+            vertexBuffer.push_back(0);
+        }
     }
 }
 

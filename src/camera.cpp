@@ -1,6 +1,7 @@
-#include <camera.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include <camera.hpp>
 
 using namespace glm;
 
@@ -28,9 +29,9 @@ void camera::moveBy(float deltaX, float deltaY, float deltaZ) { position += vec3
 void camera::moveForward(float value) { position += value * vec3(forward.x, forward.y, 0); }
 void camera::moveBackward(float value) { position += value * vec3(-forward.x, -forward.y, 0); }
 void camera::moveRight(float value) { position += value * vec3(right.x, right.y, 0); }
-void camera::moveLeft(float value) { position += vec3(-right.x, -right.y, 0); }
-void camera::moveUp(float value) { position += vec3(0, 0, up.z); }
-void camera::moveDown(float value) { position += vec3(0, 0, -up.z); }
+void camera::moveLeft(float value) { position += value * vec3(-right.x, -right.y, 0); }
+void camera::moveUp(float value) { position += value * vec3(0, 0, up.z); }
+void camera::moveDown(float value) { position += value * vec3(0, 0, -up.z); }
 void camera::pan(float degrees)
 {
     quat pan = quat(cos(radians(degrees) / 2), sin(radians(degrees) / 2) * vec3(0, 0, 1));

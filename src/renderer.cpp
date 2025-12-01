@@ -1,13 +1,15 @@
-#include <renderer.hpp>
-#include <glew/glew.hpp>
-#include <glfw/glfw.hpp>
 #include <fstream>
 #include <sstream>
 #include <iostream>
 
+#include <glew/glew.hpp>
+#include <glfw/glfw.hpp>
+
+#include <renderer.hpp>
+
 using namespace std;
 
-renderer::renderer(const world& scene_)
+renderer::renderer(world& scene_)
 : scene(scene_), windowWidth(1280), windowHeight(720)
 {
     if (glfwInit() != GLFW_TRUE) exit(-1);
