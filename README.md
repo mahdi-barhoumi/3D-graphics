@@ -31,7 +31,6 @@ Project structure (high level)
 - CMakeLists.txt or other build files at project root (if present)
 
 Troubleshooting
-- Missing DLL at runtime (Windows): copy required DLLs (glfw3.dll, glew32.dll) to the executable folder or add their directory to PATH.
 - GL version/context issues: check glfw window hints and ensure drivers support requested GL profile.
 - stb_image: When using STB from source, define implementation macro (e.g. `#define STB_IMAGE_IMPLEMENTATION`) in a single translation unit.
 

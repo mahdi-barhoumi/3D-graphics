@@ -58,7 +58,7 @@
 #define __WGLEW_H__
 
 #ifdef __wglext_h_
-#error wglext.h included before wglew.h
+#error wglext.h included before wglew.hpp
 #endif
 
 #define __wglext_h_

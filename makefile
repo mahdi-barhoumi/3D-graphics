@@ -1,26 +1,45 @@
-C = gcc
-CPP = g++
+CC      = gcc
+CXX     = g++
 LIB_DIR = ./lib
 INCLUDE_DIR = ./include
 OBJ_DIR = ./build
 
-SRCS = $(wildcard src/*.cpp)
-OBJS = $(patsubst src/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
+# Recursive wildcard to find matching files
+rwildcard = $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
 
-CXXFLAGS = -I $(INCLUDE_DIR) -std=c++17
+# Source files (both C and C++)
+C_SRCS   = $(call rwildcard,src/,*.c)
+CPP_SRCS = $(call rwildcard,src/,*.cpp)
+
+# Object files (mirror directory structure)
+C_OBJS   = $(patsubst src/%.c,$(OBJ_DIR)/%.o,$(C_SRCS))
+CPP_OBJS = $(patsubst src/%.cpp,$(OBJ_DIR)/%.o,$(CPP_SRCS))
+
+OBJS = $(C_OBJS) $(CPP_OBJS)
+
+# Include directories
+CXXFLAGS = -std=c++23 -I$(INCLUDE_DIR) -DGLEW_STATIC -DSTB_IMAGE_IMPLEMENTATION -DGLFW_EXPOSE_NATIVE_WIN32 -DGLFW_EXPOSE_NATIVE_WGL
+
+CFLAGS = -I$(INCLUDE_DIR)
+
+LDFLAGS = -L$(LIB_DIR) -lglew -lglfw -lopengl32 -lgdi32 -luser32 -lkernel32
 
 .PHONY: all clean
 
 all: Application
 
 Application: $(OBJS)
-	$(CPP) $(OBJS) -o Application -L$(LIB_DIR) -lglfw -lglew -lopengl32 -lgdi32
+	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
 
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
+# Compile C files
+$(OBJ_DIR)/%.o: src/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%.o: src/%.cpp | $(OBJ_DIR)
-	$(CPP) $(CXXFLAGS) -c $< -o $@
+# Compile C++ files
+$(OBJ_DIR)/%.o: src/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm.exe -rf $(OBJ_DIR) Application
+	rm -rf $(OBJ_DIR) Application
