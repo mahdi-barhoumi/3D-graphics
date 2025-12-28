@@ -82,11 +82,11 @@
 #define __EGLEW_H__
 
 #ifdef __eglext_h_
-#error eglext.h included before eglew.h
+#error eglext.h included before eglew.hpp
 #endif
 
 #if defined(__egl_h_)
-#error egl.h included before eglew.h
+#error egl.h included before eglew.hpp
 #endif
 
 #define __eglext_h_
@@ -106,7 +106,7 @@
 #include <KHR/khrplatform.h>
 #include <EGL/eglplatform.h>
 
-#include <GL/glew.h>
+#include <glew/glew.hpp>
 
 #ifdef __cplusplus
 extern "C" {
