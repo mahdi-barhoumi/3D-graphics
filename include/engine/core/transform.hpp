@@ -6,7 +6,6 @@ namespace Engine
 {
     class Transform : public Component
     {
-
         private:
 
         glm::vec3 m_Scale = glm::vec3(1);
@@ -20,9 +19,6 @@ namespace Engine
         glm::vec3 Forward() const;
         glm::mat4 GetWorldMatrix() const;
         glm::mat4 GetInverseWorldMatrix() const;
-        void Yaw(float degrees);
-        void Roll(float degrees);
-        void Pitch(float degrees);
         void RotateAround(glm::vec3 vector, float degrees);
         void RotateTo(float angleAroundX, float angleAroundY, float angleAroundZ);
         void RotateBy(float deltaAngleAroundX, float deltaAngleAroundY, float deltaAngleAroundZ);
