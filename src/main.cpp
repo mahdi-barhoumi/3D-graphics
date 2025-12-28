@@ -27,8 +27,8 @@ int main(void)
         Handle cameraHandle = world.Create();
         Object camera = world.Get(cameraHandle);
         Transform cameraTransform;
-        cameraTransform.TranslateTo(5, -10, 5);
         cameraTransform.RotateTo(glm::radians(90.0f), 0, 0);
+        cameraTransform.TranslateTo(5, -10, 5);
         camera.Add<Transform>(cameraTransform);
         camera.Add<Camera>(Camera());
         camera.Add<Input>(Input(window));
@@ -37,7 +37,7 @@ int main(void)
         Object cube = world.Get(cubeHandle);
         Transform cubeTransform;
         cubeTransform.TranslateTo(3, 3, 0);
-        cube.Add<Input>(Input(window));
+        //cube.Add<Input>(Input(window));
         cube.Add<Transform>(cubeTransform);
         cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
         cube.Add<Texture>(Texture("./assets/textures/stone.png"));
@@ -51,24 +51,55 @@ int main(void)
         for (auto [handle, transform, input] : world.View<Transform, Input>())
         {
             Key key;
-            while ((key = input.PopFirstKey()) != Key::None)
+            while (input.HasKeys())
             {
-                switch (key)
+                glm::vec3 forward;
+                glm::vec2 direction;
+                switch (input.PopFirstKey())
                 {
-                    case Key::Up:
-                        transform.TranslateBy(0, 0.1, 0);
+                    case Key::Z:
+                        forward = transform.Forward();
+                        direction = glm::normalize(glm::vec2(forward.x, forward.y));
+                        transform.TranslateBy(direction.x * 0.2, direction.y * 0.2, 0);
                     break;
-                    case Key::Down:
-                        transform.TranslateBy(0, -0.1, 0);
+                    case Key::S:
+                        forward = transform.Forward();
+                        direction = - glm::normalize(glm::vec2(forward.x, forward.y));
+                        transform.TranslateBy(direction.x * 0.2, direction.y * 0.2, 0);
                     break;
-                    case Key::Right:
-                        transform.TranslateBy(0.1, 0, 0);
+                    case Key::D:
+                        forward = transform.Right();
+                        direction = glm::normalize(glm::vec2(forward.x, forward.y));
+                        transform.TranslateBy(direction.x * 0.2, direction.y * 0.2, 0);
                     break;
-                    case Key::Left:
-                        transform.TranslateBy(-0.1, 0, 0);
+                    case Key::Q:
+                        forward = transform.Right();
+                        direction = - glm::normalize(glm::vec2(forward.x, forward.y));
+                        transform.TranslateBy(direction.x * 0.2, direction.y * 0.2, 0);
+                    break;
+                    case Key::E:
+                        transform.Roll(0.5);
+                    break;
+                    case Key::A:
+                        transform.Roll(-0.5);
+                    break;
+                    case Key::LeftShift:
+                        transform.TranslateBy(0, 0, 0.1);
+                    break;
+                    case Key::LeftControl:
+                        transform.TranslateBy(0, 0, -0.1);
                     break;
                 }
             }
+            Movement movement;
+            while (input.HasMovements())
+            {
+                const float sensitivity = 20;
+                movement = input.PopFirstMovement();
+                transform.Yaw(-movement.deltaX * sensitivity);
+                transform.Pitch(movement.deltaY * sensitivity);
+            }
+
         }
         renderer.Render(world, window);
         window.SwapBuffers();

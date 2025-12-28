@@ -8,22 +8,33 @@ namespace Engine
     enum class Key
     {
         None,
-        Right,
-        Left,
-        Down,
-        Up
+        MouseRight,
+        MouseLeft,
+        Space,
+        LeftShift,
+        LeftControl,
+        A, D, E, S, Q, Z
+    };
+
+    struct Movement
+    {
+        float deltaX = 0;
+        float deltaY = 0;
     };
 
     class Window;
 
     class Input : public Component
     {
+        friend class Window;
+
         private:
 
-        std::weak_ptr<std::vector<std::weak_ptr<std::queue<Key>>>> m_InputQueuesWeak;
-        std::shared_ptr<std::queue<Key>> m_Queue = std::make_shared<std::queue<Key>>();
+        Window* mp_Window = nullptr;
+        std::queue<Key> m_KeyQueue;
+        std::queue<Movement> m_MovementQueue;
 
-        void Unregister();
+        static constexpr unsigned int s_MaxQueueSize = 10;
 
         public:
 
@@ -35,10 +46,18 @@ namespace Engine
         Input& operator=(const Input& other);
         Input& operator=(Input&& other) noexcept;
 
-        void Clear();
+        void PullFrom(Window& window);
+
+        bool HasKeys();
+        void ClearKeys();
         Key GetLastKey();
         Key GetFirstKey();
         Key PopFirstKey();
+        bool HasMovements();
+        void ClearMovements();
+        Movement GetLastMovement();
+        Movement GetFirstMovement();
+        Movement PopFirstMovement();
 
     };
 }

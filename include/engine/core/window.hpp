@@ -18,14 +18,18 @@ namespace Engine
         unsigned int m_Height = 480;
         float m_AspectRatio = static_cast<float>(m_Width) / static_cast<float>(m_Height);
         GLFWwindow* mp_Window = nullptr;
-        std::shared_ptr<std::vector<std::weak_ptr<std::queue<Key>>>> m_InputQueues;
+        std::vector<Input*> m_Inputs;
 
         void Create();
-        void PushKeyToInputQueues(Key key);
+        void RegisterInput(Input* input);
+        void UnregisterInput(Input* input);
+        void PushKeyToInputs(const Key& key);
+        void PushMovementToInputs(const Movement& movement);
 
         static GLFWwindow* s_MainWindow;
         static GLFWwindow* Initialize();
         static void WindowSizeCallback(GLFWwindow* window, int width, int height);
+        static void WindowCursorPositionCallback(GLFWwindow* window, double x, double y);
 
         public:
 
@@ -36,15 +40,14 @@ namespace Engine
 
         std::string GetTitle();
         void SetTitle(std::string title);
+        float GetAspectRatio();
         unsigned int GetWidth();
         unsigned int GetHeight();
-        float GetAspectRatio();
+        unsigned int GetInputsCount();
         bool ShouldClose();
         void MakeCurrent();
         void SwapBuffers();
         void ProcessEvents();
-
-        int GetNumQueues();
 
     };
 }

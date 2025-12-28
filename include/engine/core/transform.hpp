@@ -15,18 +15,21 @@ namespace Engine
 
         public:
 
-        Transform() = default;
-        Transform(const Transform&) = default;
-        ~Transform() = default;
-
-        void TranslateTo(float x, float y, float z);
-        void TranslateBy(float deltaX, float deltaY, float deltaZ);
+        glm::vec3 Up() const;
+        glm::vec3 Right() const;
+        glm::vec3 Forward() const;
+        glm::mat4 GetWorldMatrix() const;
+        glm::mat4 GetInverseWorldMatrix() const;
+        void Yaw(float degrees);
+        void Roll(float degrees);
+        void Pitch(float degrees);
+        void RotateAround(glm::vec3 vector, float degrees);
         void RotateTo(float angleAroundX, float angleAroundY, float angleAroundZ);
         void RotateBy(float deltaAngleAroundX, float deltaAngleAroundY, float deltaAngleAroundZ);
         void ScaleTo(float scaleX, float scaleY, float scaleZ);
         void ScaleBy(float scalarX, float scalarY, float scalarZ);
-        glm::mat4 GetWorldMatrix() const;
-        glm::mat4 GetInverseWorldMatrix() const;
+        void TranslateTo(float x, float y, float z);
+        void TranslateBy(float deltaX, float deltaY, float deltaZ);
 
     };
 }
