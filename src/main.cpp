@@ -24,10 +24,16 @@ int main(void)
     Window window = Window("3D", 1280, 720);
 
     {
+        Handle surfaceHandle = world.Create();
+        Object surface = world.Get(surfaceHandle);
+        surface.Add<Transform>(Transform());
+        surface.Add<Mesh>(Mesh("./assets/meshes/surface.obj"));
+        surface.Add<Texture>(Texture("./assets/textures/stone.png"));
+
         Handle cameraHandle = world.Create();
         Object camera = world.Get(cameraHandle);
         Transform cameraTransform;
-        cameraTransform.TranslateTo(0, -10, 0);
+        cameraTransform.TranslateTo(0, -10, 5);
         camera.Add<Transform>(cameraTransform);
         camera.Add<Camera>(Camera());
         camera.Add<Input>(Input(window));
@@ -39,7 +45,7 @@ int main(void)
         //cube.Add<Input>(Input(window));
         cube.Add<Transform>(cubeTransform);
         cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
-        cube.Add<Texture>(Texture("./assets/textures/stone.png"));
+        cube.Add<Texture>(Texture("./assets/textures/dirt.png"));
     }
 
     Renderer renderer = Renderer();
@@ -94,7 +100,7 @@ int main(void)
             Movement movement;
             while (input.HasMovements())
             {
-                const float sensitivity = 50;
+                const float sensitivity = 75;
                 movement = input.PopFirstMovement();
                 camera.Pan(- movement.deltaX * sensitivity);
                 camera.Tilt(movement.deltaY * sensitivity);

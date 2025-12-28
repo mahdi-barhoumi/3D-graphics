@@ -29,39 +29,3 @@ namespace Engine
 
     };
 }
-
-// #include <glm/glm.hpp>
-
-// class Transform 
-// {
-//     private:
-//         glm::vec3 scale = glm::vec3(1);
-//         glm::vec3 position = glm::vec3(0);
-//         glm::quat rotation = glm::quat(glm::vec3(0));
-//         glm::mat4 scalingMatrix = mat4(1);
-//         glm::mat4 rotationMatrix = mat4(1);
-//         glm::mat4 translationMatrix = mat4(1);
-//         glm::mat4 modelMatrix = mat4(1);
-
-//         void calculateScalingMatrix(void);
-//         void calculateRotationMatrix(void);
-//         void calculateTranslationMatrix(void);
-//         void calculateModelMatrix(void);
-
-//     public:
-//         Transform() = default;
-//         Transform(const glm::vec3& scale);
-//         Transform(const glm::vec3& scale, const glm::vec3& position);
-//         Transform(const glm::vec3& scale, const glm::vec3& position, const glm::quat& rotation);
-
-//         const glm::vec3& getScale(void);
-//         void setScale(const glm::vec3& scale);
-//         const glm::vec3& getPosition(void);
-//         void setPosition(const glm::vec3& position);
-//         const glm::quat& getRotation(void);
-//         void setRotation(const glm::quat& rotation);
-//         const glm::mat4& getScalingMatrix(void);
-//         const glm::mat4& getRotationMatrix(void);
-//         const glm::mat4& getTranslationMatrix(void);
-//         const glm::mat4& getModelMatrix(void);
-// };

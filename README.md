@@ -1,41 +1,99 @@
-# 3D Graphics
+# 3D Graphics Engine
 
-Small collection of 3D graphics headers and utilities used by the project:
-- GLFW (windowing & input)
-- GLEW (OpenGL extension loader)
-- GLM (math)
-- stb_image (image loading)
+A lightweight, modular C++ 3D graphics project / engine focused on learning and experimenting with real-time rendering concepts using OpenGL.
 
-Purpose
-- Provide the project with common cross-platform graphics libraries and helpers.
-- Serve as a convenience copy of headers/source for local development.
+## Table of Contents
 
-Quick start (generic)
-1. Install prerequisites:
-   - CMake (>= 3.10)
-   - A C/C++ compiler (MSVC, clang, or gcc)
-   - OpenGL development headers/libraries (system dependent)
-2. Create a build directory and run CMake:
-   - mkdir build && cd build
-   - cmake .. 
-   - cmake --build . --config Release
-3. Run your executable from the build output. Ensure any required DLLs (e.g. glfw, glew) are on PATH or next to the executable on Windows.
+- [Overview](#overview)
+- [Features](#features)
+- [Repository Structure](#repository-structure)
+- [Prerequisites](#prerequisites)
+- [Building](#building)
+- [Running](#running)
+- [Project Layout & Key Components](#project-layout--key-components)
 
-Notes
-- This repository contains third-party code (GLFW, GLEW, GLM, stb). Consult the headers for the exact license text. Do not remove or alter license texts from those files.
-- If you see missing-linker or unresolved-symbol errors, confirm your linker includes OpenGL and the appropriate platform libraries (e.g. opengl32 on Windows, GL on Linux) and that any dynamic libraries are available at runtime.
+---
 
-Project structure (high level)
-- include/ : headers for GLFW, GLEW, GLM, stb and others
-- src/ : (if present) project source files
-- CMakeLists.txt or other build files at project root (if present)
+## Overview
 
-Troubleshooting
-- GL version/context issues: check glfw window hints and ensure drivers support requested GL profile.
-- stb_image: When using STB from source, define implementation macro (e.g. `#define STB_IMAGE_IMPLEMENTATION`) in a single translation unit.
+This project implements a small 3D engine with a focus on clarity and extensibility. The codebase includes a basic renderer, resource management (shaders, textures, meshes), scene/world management, and simple physics and input handling.
 
-Contributing
-- Add changes, tests or examples and open a PR. Keep third-party license notices intact.
+The repository contains both source code and vendor headers for common libraries (GLM, stb, GLFW, GLEW) to simplify building and experimentation.
 
-License
-- This repository includes third-party components. See their headers for license details. The project itself does not remove or modify those notices.
+## Features
+
+- Basic scene and object system
+- Shader and resource management
+- Mesh loading and rendering
+- Simple camera and input handling
+- Basic physics/collision stubs and utilities
+- Example assets (shaders, meshes, textures)
+
+## Repository Structure
+
+Top-level layout (abridged):
+
+```
+/ (repo root)
+├─ include/            # Public headers and bundled 3rd-party headers
+├─ src/                # Implementation sources
+├─ assets/             # Shaders, meshes, textures
+├─ build/              # Default build directory (CMake / make targets)
+├─ tools/              # Utility tools and experiments
+├─ makefile            # Simple build entrypoint
+└─ README.md           # This file
+```
+
+## Prerequisites
+
+- A C++20-compatible compiler (GCC, Clang, MSVC)
+- CMake (recommended)
+- OpenGL development environment
+- Recommended libraries (typically included in `include/`):
+  - GLFW
+  - GLEW
+  - GLM
+  - stb_image
+
+On Windows, use MSYS2, Visual Studio, or another environment that supports CMake and your compiler of choice.
+
+> Note: The repository includes copies of several dependencies under `include/` to simplify getting started; system packages can be used as an alternative.
+
+## Building
+
+Recommended (CMake):
+
+```bash
+# From project root
+cmake -S . -B build
+cmake --build build --config Release
+```
+
+If the repository provides a `Makefile`, you can also try:
+
+```bash
+make
+```
+
+The produced executable will be placed in the build output directory. On Windows the executable will typically be under `build/` with a `.exe` extension; on Unix-like systems it will be `build/<executable>`.
+
+## Running
+
+After building, run the produced executable. Example (Unix):
+
+```bash
+./build/main
+```
+
+On Windows, run the generated `.exe` from the build folder (for example `build\Release\main.exe` or similar depending on the generator and configuration).
+
+The application will load assets from the `assets/` directory (shaders, meshes, textures). Ensure the working directory is set so that `assets/` is accessible at runtime.
+
+## Project Layout & Key Components
+
+- `src/main.cpp` — Application entrypoint
+- `include/engine/core/` & `src/engine/core/` — Core engine systems: `window`, `renderer`, `camera`, `world`, `object`, `mesh`, `shader`, `texture`, `input`, `physics`, `light`, etc.
+- `include/engine/utils` & `src/engine/utils` — Helper utilities
+- `assets/` — Example shaders, meshes, textures used by demos and tests
+
+This organization separates public headers (in `include/`) from implementation (`src/`) to make the core engine reusable and easier to integrate into other projects.
