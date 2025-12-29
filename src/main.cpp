@@ -38,15 +38,12 @@ int main(void)
     }
 
     {
-        Handle cubeHandle = world.Create();
-        Object cube = world.Get(cubeHandle);
-        Transform cubeTransform;
-        cubeTransform.TranslateTo(5, 5, -20);
-        cubeTransform.ScaleTo(20, 20, 20);
-        cube.Add<Transform>(cubeTransform);
-        cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
-        cube.Add<Texture>(Texture("./assets/textures/stone.png"));
-        cube.Add<Physics>(Physics(CubeCollider(2)));
+        Handle surfaceHandle = world.Create();
+        Object surface = world.Get(surfaceHandle);
+        surface.Add<Transform>(Transform());
+        surface.Add<Mesh>(Mesh("./assets/meshes/surface.obj"));
+        surface.Add<Texture>(Texture("./assets/textures/stone.png"));
+        surface.Add<Physics>(Physics(PlaneCollider(40)));
     }
 
     {
