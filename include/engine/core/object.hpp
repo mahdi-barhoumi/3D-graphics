@@ -11,7 +11,7 @@ namespace Engine
         private:
 
         Handle m_Handle = entt::null;
-        World* mp_World;
+        World* mp_World = nullptr;
 
         Object(Handle handle, World* world);
 

@@ -11,6 +11,10 @@ namespace Engine
         MouseRight,
         MouseLeft,
         Space,
+        UpArrow,
+        DownArrow,
+        LeftArrow,
+        RightArrow,
         LeftShift,
         LeftControl,
         A, D, E, S, Q, Z
@@ -34,7 +38,7 @@ namespace Engine
         std::queue<Key> m_KeyQueue;
         std::queue<Movement> m_MovementQueue;
 
-        static constexpr unsigned int s_MaxQueueSize = 10;
+        static constexpr unsigned int s_MaxQueueSize = 255;
 
         public:
 
