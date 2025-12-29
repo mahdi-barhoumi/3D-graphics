@@ -30,6 +30,8 @@ namespace Engine
         void ScaleBy(float scalarX, float scalarY, float scalarZ);
         void TranslateTo(float x, float y, float z);
         void TranslateBy(float deltaX, float deltaY, float deltaZ);
+        void TranslateTo(glm::vec3 position);
+        void TranslateBy(glm::vec3 delta);
 
     };
 }

@@ -239,18 +239,63 @@ namespace Engine
     void Solver::Solve(World& world, float deltaTime)
     {
         auto view = world.View<Transform, Physics>();
-        for (auto [handle1, transform1, physics1] : view)
+        for (auto [handle, transform, physics] : view)
         {
-            for (auto [handle2, transform2, physics2] : view)
+            if (!physics.m_Stationary)
             {
-                if (handle1 == handle2) continue;
-                if (GJK(physics1.GetCollider(), transform1, physics2.GetCollider(), transform2))
+                physics.m_Force = glm::vec3(0);
+                physics.m_Force += glm::vec3(0, 0, -1) * m_Gravity * physics.m_Mass;
+                
+                physics.m_Velocity += physics.m_Force / physics.m_Mass * deltaTime;
+                physics.m_Velocity *= (1.0f - physics.m_Drag * deltaTime);
+
+                transform.TranslateBy(physics.m_Velocity * deltaTime);
+            }
+        }
+        for (auto [handleA, transformA, physicsA] : view)
+        {
+            for (auto [handleB, transformB, physicsB] : view)
+            {
+                if (handleA == handleB) continue;
+                if (physicsA.m_Stationary && physicsB.m_Stationary) continue; 
+                if (GJK(physicsA.GetCollider(), transformA, physicsB.GetCollider(), transformB))
                 {
-                    std::cout << std::format("{} and {} collided!\n", (int) handle1, (int) handle2);
-                    Collision collision = EPA(m_Simplex, physics1.GetCollider(), transform1, physics2.GetCollider(), transform2);
-                    glm::vec3 seperator = collision.normal * collision.depth * 0.5f;
-                    transform2.TranslateBy(seperator.x, seperator.y, seperator.z);
-                    transform1.TranslateBy(-seperator.x, -seperator.y, -seperator.z);
+                    std::cout << std::format("Object {} collided with object {}!\n", (int) handleA, (int) handleB);
+                    Collision collision = EPA(m_Simplex, physicsA.GetCollider(), transformA, physicsB.GetCollider(), transformB);
+                    
+                    glm::vec3 relativeVelocity = physicsB.m_Velocity - physicsA.m_Velocity;
+                    float velocityAlongNormal = glm::dot(relativeVelocity, collision.normal);
+                    glm::vec3 impulse;
+
+                    if (velocityAlongNormal > 0) impulse = glm::vec3(0);
+                    else
+                    {
+                        float e = std::min(physicsA.m_Restitution, physicsB.m_Restitution);
+                        float j = -velocityAlongNormal * (1 + e);
+                        j /= (1 / physicsA.m_Mass + 1 / physicsB.m_Mass);
+                        impulse = j * collision.normal;
+                    }
+
+                    glm::vec3 seperator = collision.normal * collision.depth;
+                    if (!physicsA.m_Stationary)
+                    {
+                        physicsA.m_Velocity -= impulse / physicsA.m_Mass;
+                        transformA.TranslateBy(-seperator);
+                    }
+                    else if (!physicsB.m_Stationary)
+                    {
+                        physicsB.m_Velocity += impulse / physicsB.m_Mass;
+                        transformB.TranslateBy(seperator);
+                    }
+                    else
+                    {
+                        physicsA.m_Velocity -= impulse / physicsA.m_Mass;
+                        transformA.TranslateBy(-seperator * 0.5f);
+                        physicsB.m_Velocity += impulse / physicsB.m_Mass;
+                        transformB.TranslateBy(seperator * 0.5f);
+                    }
+                    std::cout << std::format("Object A {} velocity is vec3({}, {}, {})\n", (int) handleA, physicsA.m_Velocity.x, physicsA.m_Velocity.y, physicsA.m_Velocity.z);
+                    std::cout << std::format("Object B {} velocity is vec3({}, {}, {})\n", (int) handleB, physicsB.m_Velocity.x, physicsB.m_Velocity.y, physicsB.m_Velocity.z);
                 }
             }
         }

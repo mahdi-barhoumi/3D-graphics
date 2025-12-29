@@ -49,6 +49,7 @@ namespace Engine
             bool colliding;
         };
 
+        float m_Gravity = 9.81f;
         Simplex m_Simplex;
 
         bool GJK(const Collider& collider1, const Transform& transform1, const Collider& collider2, const Transform& transform2);

@@ -11,6 +11,7 @@ namespace Engine
         {
             Unknown,
             Cube,
+            Plane,
             Rectangle,
             Sphere,
             Capsule,
@@ -43,6 +44,22 @@ namespace Engine
         CubeCollider() = default;
         CubeCollider(float length);
         ~CubeCollider() = default;
+
+        glm::vec3 GetSupport(const glm::vec3& direction) const override;
+
+    };
+
+    class PlaneCollider : public Collider
+    {
+        private:
+        
+        float m_HalfLength = 0.5;
+        
+        public:
+        
+        PlaneCollider() = default;
+        PlaneCollider(float length);
+        ~PlaneCollider() = default;
 
         glm::vec3 GetSupport(const glm::vec3& direction) const override;
 

@@ -12,24 +12,27 @@ namespace Engine
 
         private:
 
+        bool m_Stationary = true;
         float m_Mass = 1.0f;
-        float m_Friction = 0.0f;
+        float m_Drag = 0.6f;
+        float m_Restitution = 0.5f;
         glm::vec3 m_Velocity = glm::vec3(0);
-        glm::vec3 m_Acceleration = glm::vec3(0);
+        glm::vec3 m_Force = glm::vec3(0);
         std::shared_ptr<Collider> m_Collider = nullptr;
 
         public:
 
         Physics() = default;
         template<ColliderConcept T>
-        Physics(T&& collider) : m_Collider(std::make_shared<T>(std::forward<T>(collider))) {}
+        Physics(T&& collider, bool stationary = true) : m_Collider(std::make_shared<T>(std::forward<T>(collider))), m_Stationary(stationary) {}
         template<ColliderConcept T>
-        Physics(T&& collider, float mass) : m_Collider(std::make_shared<T>(std::forward<T>(collider))), m_Mass(mass) {}
+        Physics(T&& collider, float mass, bool stationary = true) : m_Collider(std::make_shared<T>(std::forward<T>(collider))), m_Mass(mass), m_Stationary(stationary) {}
         template<ColliderConcept T>
-        Physics(T&& collider, float mass, float friction) : m_Collider(std::make_shared<T>(std::forward<T>(collider))), m_Mass(mass), m_Friction(friction) {}
+        Physics(T&& collider, float mass, float drag, bool stationary = true) : m_Collider(std::make_shared<T>(std::forward<T>(collider))), m_Mass(mass), m_Drag(drag), m_Stationary(stationary) {}
         ~Physics() = default;
 
         Collider& GetCollider();
+        float GetMass();
         void ApplyForce(glm::vec3 force);
 
     };

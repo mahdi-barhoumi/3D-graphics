@@ -11,6 +11,8 @@ namespace Engine
     glm::mat4 Transform::GetInverseTranslationMatrix() const { return glm::inverse(GetTranslationMatrix()); }
     glm::mat4 Transform::GetWorldMatrix() const { return GetTranslationMatrix() * GetRotationMatrix() * GetScalingMatrix(); }
     glm::mat4 Transform::GetInverseWorldMatrix() const { return glm::inverse(GetWorldMatrix()); }
+    void Transform::TranslateTo(glm::vec3 position) { m_Position = position; }
+    void Transform::TranslateBy(glm::vec3 delta) { m_Position += delta; }
     void Transform::TranslateTo(float x, float y, float z) { m_Position = glm::vec3(x, y, z); }
     void Transform::TranslateBy(float deltaX, float deltaY, float deltaZ) { m_Position += glm::vec3(deltaX, deltaY, deltaZ); }
     void Transform::RotateAround(glm::vec3 vector, float degrees)

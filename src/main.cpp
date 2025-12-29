@@ -38,11 +38,15 @@ int main(void)
     }
 
     {
-        Handle handle = world.Create();
-        Object surface = world.Get(handle);
-        surface.Add<Transform>(Transform());
-        surface.Add<Mesh>(Mesh("./assets/meshes/surface.obj"));
-        surface.Add<Texture>(Texture("./assets/textures/stone.png"));
+        Handle cubeHandle = world.Create();
+        Object cube = world.Get(cubeHandle);
+        Transform cubeTransform;
+        cubeTransform.TranslateTo(5, 5, -20);
+        cubeTransform.ScaleTo(20, 20, 20);
+        cube.Add<Transform>(cubeTransform);
+        cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
+        cube.Add<Texture>(Texture("./assets/textures/stone.png"));
+        cube.Add<Physics>(Physics(CubeCollider(2)));
     }
 
     {
@@ -50,6 +54,7 @@ int main(void)
         Object cube = world.Get(cubeHandle);
         Transform cubeTransform;
         cubeTransform.TranslateTo(5, 5, 1);
+        cubeTransform.ScaleTo(2, 2, 2);
         cube.Add<Input>(Input(window));
         cube.Add<Transform>(cubeTransform);
         cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
@@ -61,13 +66,27 @@ int main(void)
         Handle cubeHandle = world.Create();
         Object cube = world.Get(cubeHandle);
         Transform cubeTransform;
-        cubeTransform.TranslateTo(-5, -5, 1);
+        cubeTransform.TranslateTo(0, 0, 10);
         cube.Add<Transform>(cubeTransform);
         cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
         cube.Add<Texture>(Texture("./assets/textures/stone.png"));
-        cube.Add<Physics>(Physics(CubeCollider(2)));
+        cube.Add<Physics>(Physics(CubeCollider(2), false));
     }
 
+    {
+        Handle cubeHandle = world.Create();
+        Object cube = world.Get(cubeHandle);
+        Transform cubeTransform;
+        cubeTransform.TranslateTo(-5, -5, 10);
+        cube.Add<Transform>(cubeTransform);
+        cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
+        cube.Add<Texture>(Texture("./assets/textures/stone.png"));
+        cube.Add<Physics>(Physics(CubeCollider(2), false));
+    }
+
+    float deltaTime;
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     while (!window.ShouldClose())
     {
         window.ProcessEvents();
@@ -149,7 +168,11 @@ int main(void)
             }
 
         }
-        solver.Solve(world, 0);
+        stop = std::chrono::high_resolution_clock::now();
+        deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
+        deltaTime /= 1000;
+        start = std::chrono::high_resolution_clock::now();
+        solver.Solve(world, deltaTime);
         renderer.Render(world, window);
         window.SwapBuffers();
     }
