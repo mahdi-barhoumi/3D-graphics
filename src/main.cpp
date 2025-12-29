@@ -11,6 +11,9 @@
 #include <engine/core/camera.hpp>
 #include <engine/core/texture.hpp>
 #include <engine/core/renderer.hpp>
+#include <engine/core/solver.hpp>
+#include <engine/core/physics.hpp>
+#include <engine/core/collider.hpp>
 #include <engine/utils/utils.hpp>
 
 using namespace std;
@@ -19,40 +22,85 @@ using namespace Engine;
 
 int main(void)
 {
-
     World world;
     Window window = Window("3D", 1280, 720);
+    Solver solver = Solver();
+    Renderer renderer = Renderer();
 
     {
-        Handle surfaceHandle = world.Create();
-        Object surface = world.Get(surfaceHandle);
+        Handle handle = world.Create();
+        Object camera = world.Get(handle);
+        Transform transform;
+        transform.TranslateTo(0, -10, 5);
+        camera.Add<Transform>(transform);
+        camera.Add<Camera>(Camera());
+        camera.Add<Input>(Input(window));
+    }
+
+    {
+        Handle handle = world.Create();
+        Object surface = world.Get(handle);
         surface.Add<Transform>(Transform());
         surface.Add<Mesh>(Mesh("./assets/meshes/surface.obj"));
         surface.Add<Texture>(Texture("./assets/textures/stone.png"));
+    }
 
-        Handle cameraHandle = world.Create();
-        Object camera = world.Get(cameraHandle);
-        Transform cameraTransform;
-        cameraTransform.TranslateTo(0, -10, 5);
-        camera.Add<Transform>(cameraTransform);
-        camera.Add<Camera>(Camera());
-        camera.Add<Input>(Input(window));
-
+    {
         Handle cubeHandle = world.Create();
         Object cube = world.Get(cubeHandle);
         Transform cubeTransform;
-        cubeTransform.TranslateTo(5, 5, 0);
-        //cube.Add<Input>(Input(window));
+        cubeTransform.TranslateTo(5, 5, 1);
+        cube.Add<Input>(Input(window));
         cube.Add<Transform>(cubeTransform);
         cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
         cube.Add<Texture>(Texture("./assets/textures/dirt.png"));
+        cube.Add<Physics>(Physics(CubeCollider(2)));
     }
 
-    Renderer renderer = Renderer();
+    {
+        Handle cubeHandle = world.Create();
+        Object cube = world.Get(cubeHandle);
+        Transform cubeTransform;
+        cubeTransform.TranslateTo(-5, -5, 1);
+        cube.Add<Transform>(cubeTransform);
+        cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
+        cube.Add<Texture>(Texture("./assets/textures/stone.png"));
+        cube.Add<Physics>(Physics(CubeCollider(2)));
+    }
 
     while (!window.ShouldClose())
     {
         window.ProcessEvents();
+        for (auto [handle, transform, input] : world.View<Transform, Input>())
+        {
+            Object object = world.Get(handle);
+            if (object.Has<Camera>()) continue;
+            Key key;
+            while (input.HasKeys())
+            {
+                switch (key = input.PopFirstKey())
+                {
+                    case Key::UpArrow:
+                        transform.TranslateBy(0, 0.1, 0);
+                    break;
+                    case Key::DownArrow:
+                        transform.TranslateBy(0, -0.1, 0);
+                    break;
+                    case Key::RightArrow:
+                        transform.TranslateBy(0.1, 0, 0);
+                    break;
+                    case Key::LeftArrow:
+                        transform.TranslateBy(-0.1, 0, 0);
+                    break;
+                    case Key::LeftShift:
+                        transform.TranslateBy(0, 0, 0.1);
+                    break;
+                    case Key::LeftControl:
+                        transform.TranslateBy(0, 0, -0.1);
+                    break;
+                }
+            }
+        }
         for (auto [handle, transform, camera, input] : world.View<Transform, Camera, Input>())
         {
             Key key;
@@ -89,12 +137,6 @@ int main(void)
                     case Key::A:
                         camera.Roll(-0.5);
                     break;
-                    case Key::LeftShift:
-                        transform.TranslateBy(0, 0, 0.1);
-                    break;
-                    case Key::LeftControl:
-                        transform.TranslateBy(0, 0, -0.1);
-                    break;
                 }
             }
             Movement movement;
@@ -107,6 +149,7 @@ int main(void)
             }
 
         }
+        solver.Solve(world, 0);
         renderer.Render(world, window);
         window.SwapBuffers();
     }

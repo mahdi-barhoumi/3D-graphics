@@ -14,9 +14,13 @@ namespace Engine
 
         public:
 
-        glm::vec3 Up() const;
-        glm::vec3 Right() const;
-        glm::vec3 Forward() const;
+        glm::vec3 GetPosition() const;
+        glm::mat4 GetScalingMatrix() const;
+        glm::mat4 GetInverseScalingMatrix() const;
+        glm::mat4 GetRotationMatrix() const;
+        glm::mat4 GetInverseRotationMatrix() const;
+        glm::mat4 GetTranslationMatrix() const;
+        glm::mat4 GetInverseTranslationMatrix() const;
         glm::mat4 GetWorldMatrix() const;
         glm::mat4 GetInverseWorldMatrix() const;
         void RotateAround(glm::vec3 vector, float degrees);

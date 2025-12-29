@@ -115,6 +115,10 @@ namespace Engine
         if (glfwGetKey(mp_Window, GLFW_KEY_Q) == GLFW_PRESS) PushKeyToInputs(Key::A);
         if (glfwGetKey(mp_Window, GLFW_KEY_E) == GLFW_PRESS) PushKeyToInputs(Key::E);
         if (glfwGetKey(mp_Window, GLFW_KEY_SPACE) == GLFW_PRESS) PushKeyToInputs(Key::Space);
+        if (glfwGetKey(mp_Window, GLFW_KEY_UP) == GLFW_PRESS) PushKeyToInputs(Key::UpArrow);
+        if (glfwGetKey(mp_Window, GLFW_KEY_DOWN) == GLFW_PRESS) PushKeyToInputs(Key::DownArrow);
+        if (glfwGetKey(mp_Window, GLFW_KEY_LEFT) == GLFW_PRESS) PushKeyToInputs(Key::LeftArrow);
+        if (glfwGetKey(mp_Window, GLFW_KEY_RIGHT) == GLFW_PRESS) PushKeyToInputs(Key::RightArrow);
         if (glfwGetKey(mp_Window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) PushKeyToInputs(Key::LeftShift);
         if (glfwGetKey(mp_Window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) PushKeyToInputs(Key::LeftControl);
     }
