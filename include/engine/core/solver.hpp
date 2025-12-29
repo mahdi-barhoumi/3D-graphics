@@ -40,6 +40,17 @@ namespace Engine
 
         };
 
+        struct Collision
+        {
+            glm::vec3 A;
+            glm::vec3 B;
+            glm::vec3 normal;
+            float depth;
+            bool colliding;
+        };
+
+        Simplex m_Simplex;
+
         bool GJK(const Collider& collider1, const Transform& transform1, const Collider& collider2, const Transform& transform2);
         glm::vec3 Minkowski(const Collider& collider1, const Transform& transform1, const Collider& collider2, const Transform& transform2, glm::vec3 direction);
         bool SameDirection(const glm::vec3& direction, const glm::vec3& vector);
@@ -47,6 +58,10 @@ namespace Engine
         bool Line(Simplex& simplex, glm::vec3& direction);
         bool Triangle(Simplex& simplex, glm::vec3& direction);
         bool Tetrahedron(Simplex& simplex, glm::vec3& direction);
+
+        Collision EPA(const Simplex& simplex, const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB);
+        std::pair<std::vector<glm::vec4>, size_t> GetFaceNormals(const std::vector<glm::vec3>& polytope, const std::vector<size_t>& faces);
+        void AddIfUniqueEdge(std::vector<std::pair<size_t, size_t>>& edges, const std::vector<size_t>& faces, size_t a, size_t b);
 
         public:
 
