@@ -47,38 +47,65 @@ int main(void)
     }
 
     {
-        Handle cubeHandle = world.Create();
-        Object cube = world.Get(cubeHandle);
-        Transform cubeTransform;
-        cubeTransform.TranslateTo(5, 5, 1);
-        cubeTransform.ScaleTo(2, 2, 2);
-        cube.Add<Input>(Input(window));
-        cube.Add<Transform>(cubeTransform);
-        cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
-        cube.Add<Texture>(Texture("./assets/textures/dirt.png"));
-        cube.Add<Physics>(Physics(CubeCollider(2)));
+        Handle sphereHandle = world.Create();
+        Object sphere = world.Get(sphereHandle);
+        Transform sphereTransform;
+        sphereTransform.TranslateTo(5, 5, 10.0f);
+        sphereTransform.ScaleTo(2, 2, 2);
+        sphere.Add<Input>(Input(window));
+        sphere.Add<Transform>(sphereTransform);
+        sphere.Add<Mesh>(Mesh("./assets/meshes/sphere.obj"));
+        sphere.Add<Texture>(Texture("./assets/textures/dirt.png"));
+        sphere.Add<Physics>(Physics(SphereCollider(1), false));
     }
 
-    {
-        Handle cubeHandle = world.Create();
-        Object cube = world.Get(cubeHandle);
-        Transform cubeTransform;
-        cubeTransform.TranslateTo(0, 0, 10);
-        cube.Add<Transform>(cubeTransform);
-        cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
-        cube.Add<Texture>(Texture("./assets/textures/stone.png"));
-        cube.Add<Physics>(Physics(CubeCollider(2), false));
-    }
+    // {
+    //     Handle cubeHandle = world.Create();
+    //     Object cube = world.Get(cubeHandle);
+    //     Transform cubeTransform;
+    //     cubeTransform.m_Orientation.w = -0.549940646f;
+    //     cubeTransform.m_Orientation.x = -0.465389937f;
+    //     cubeTransform.m_Orientation.y = -0.531535745f;
+    //     cubeTransform.m_Orientation.z = -0.445474297f;
+    //     cubeTransform.m_Position.x = 1.81624949;
+    //     cubeTransform.m_Position.y = 1.68110275;
+    //     cubeTransform.m_Position.z = 1.16594315;
+    //     cube.Add<Transform>(cubeTransform);
+    //     cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
+    //     cube.Add<Texture>(Texture("./assets/textures/wood.png"));
+    //     cube.Add<Physics>(Physics(CubeCollider(2), false));        
+    // }
 
+    // {
+    //     Handle cubeHandle = world.Create();
+    //     Object cube = world.Get(cubeHandle);
+    //     Transform cubeTransform;
+    //     cubeTransform.m_Orientation.w = -0.459496379f;
+    //     cubeTransform.m_Orientation.x = -0.445305735f;
+    //     cubeTransform.m_Orientation.y = -0.511946917f;
+    //     cubeTransform.m_Orientation.z = -0.573128462f;
+    //     cubeTransform.m_Position.x = -0.15900816;
+    //     cubeTransform.m_Position.y = -0.501099348;
+    //     cubeTransform.m_Position.z = 1.09695005;
+    //     cube.Add<Transform>(cubeTransform);
+    //     cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
+    //     cube.Add<Texture>(Texture("./assets/textures/wood.png"));
+    //     cube.Add<Physics>(Physics(CubeCollider(2), false));        
+    // }
+
+    for (int i = 0; i < 5; ++i)
     {
-        Handle cubeHandle = world.Create();
-        Object cube = world.Get(cubeHandle);
-        Transform cubeTransform;
-        cubeTransform.TranslateTo(-5, -5, 10);
-        cube.Add<Transform>(cubeTransform);
-        cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
-        cube.Add<Texture>(Texture("./assets/textures/stone.png"));
-        cube.Add<Physics>(Physics(CubeCollider(2), false));
+        for (int j = 0; j < 5; ++j)
+        {
+            Handle cubeHandle = world.Create();
+            Object cube = world.Get(cubeHandle);
+            Transform cubeTransform;
+            cubeTransform.TranslateTo(2 * i - 10,  2 * j - 10, 1.2f);
+            cube.Add<Transform>(cubeTransform);
+            cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
+            cube.Add<Texture>(Texture("./assets/textures/stone.png"));
+            cube.Add<Physics>(Physics(CubeCollider(2), false));
+        }
     }
 
     float deltaTime;
@@ -107,12 +134,6 @@ int main(void)
                     break;
                     case Key::LeftArrow:
                         transform.TranslateBy(-0.1, 0, 0);
-                    break;
-                    case Key::LeftShift:
-                        transform.TranslateBy(0, 0, 0.1);
-                    break;
-                    case Key::LeftControl:
-                        transform.TranslateBy(0, 0, -0.1);
                     break;
                 }
             }
@@ -153,6 +174,12 @@ int main(void)
                     case Key::A:
                         camera.Roll(-0.5);
                     break;
+                    case Key::LeftShift:
+                        transform.TranslateBy(0, 0, 0.1);
+                    break;
+                    case Key::LeftControl:
+                        transform.TranslateBy(0, 0, -0.1);
+                    break;
                 }
             }
             Movement movement;
@@ -166,9 +193,10 @@ int main(void)
 
         }
         stop = std::chrono::high_resolution_clock::now();
-        deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
-        deltaTime /= 1000;
+        deltaTime = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
         start = std::chrono::high_resolution_clock::now();
+        deltaTime *= 1e-9;
+        window.SetTitle(format("3D, FPS: {:.2f}", 1 / deltaTime));
         solver.Solve(world, deltaTime);
         renderer.Render(world, window);
         window.SwapBuffers();

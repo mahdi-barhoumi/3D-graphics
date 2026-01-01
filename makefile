@@ -11,22 +11,26 @@ rwildcard = $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subs
 C_SRCS   = $(call rwildcard,src/,*.c)
 CPP_SRCS = $(call rwildcard,src/,*.cpp)
 
-# Object files (mirror directory structure)
+# Object files
 C_OBJS   = $(patsubst src/%.c,$(OBJ_DIR)/%.o,$(C_SRCS))
 CPP_OBJS = $(patsubst src/%.cpp,$(OBJ_DIR)/%.o,$(CPP_SRCS))
 
 OBJS = $(C_OBJS) $(CPP_OBJS)
 
-# Include directories
+# Base Flags
 CXXFLAGS = -std=c++23 -I$(INCLUDE_DIR) -DGLEW_STATIC -DSTB_IMAGE_IMPLEMENTATION -DGLFW_EXPOSE_NATIVE_WIN32 -DGLFW_EXPOSE_NATIVE_WGL
-
 CFLAGS = -I$(INCLUDE_DIR)
-
 LDFLAGS = -L$(LIB_DIR) -lglew -lglfw -lopengl32 -lgdi32 -luser32 -lkernel32
 
-.PHONY: all clean
+.PHONY: all clean debug
 
+# Default build
 all: Application
+
+# Debug build
+debug: CFLAGS += -g -O0
+debug: CXXFLAGS += -g -O0
+debug: Application
 
 Application: $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)

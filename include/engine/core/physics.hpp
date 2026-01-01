@@ -15,7 +15,7 @@ namespace Engine
         bool m_Stationary = true;
         float m_Mass = 1.0f;
         float m_Drag = 0.6f;
-        float m_Restitution = 0.5f;
+        float m_Restitution = 0.9f;
         glm::vec3 m_Velocity = glm::vec3(0);
         glm::vec3 m_Force = glm::vec3(0);
         std::shared_ptr<Collider> m_Collider = nullptr;
@@ -34,6 +34,7 @@ namespace Engine
         Collider& GetCollider();
         float GetMass();
         void ApplyForce(glm::vec3 force);
+        bool IsStationary();
 
     };
 }

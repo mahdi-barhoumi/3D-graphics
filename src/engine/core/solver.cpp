@@ -3,33 +3,46 @@
 
 #include <string>
 #include <iostream>
+#include <random>
 
 namespace Engine
 {
-    bool Solver::GJK(const Collider& collider1, const Transform& transform1, const Collider& collider2, const Transform& transform2)
+    Solver::CollisionInfo Solver::GJK(const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB)
     {
-        glm::vec3 initial = transform1.GetPosition() - transform2.GetPosition();
-        glm::vec3 support = Minkowski(collider1, transform1, collider2, transform2, initial);
+        CollisionInfo info;
+        Simplex simplex = Simplex();
 
-        m_Simplex = Simplex();
-        m_Simplex.push_front(support);
+        glm::vec3 direction = transformA.GetPosition() - transformB.GetPosition();
+        glm::vec3 support = GetSupport(colliderA, transformA, colliderB, transformB, direction);
 
-        glm::vec3 direction = -support;
-        while (true)
+        simplex.push_front(support);
+
+        direction = -support;
+
+        for (size_t iteration = 0; iteration < s_MaxGJKIterations; ++iteration)
         {
-            support = Minkowski(collider1, transform1, collider2, transform2, direction);
-    
-            if (glm::dot(support, direction) <= 0) return false;
+            support = GetSupport(colliderA, transformA, colliderB, transformB, direction);
 
-            m_Simplex.push_front(support);
-            if (NextSimplex(m_Simplex, direction)) return true;
+            // Termination condition, Adding a check to prevent cyclic support points might be good here.
+            if (!SameDirection(support, direction))
+            {
+                info.status = CollisionInfo::Status::Separated;
+                return info;
+            }
+
+            simplex.push_front(support);
+
+            if (NextSimplex(simplex, direction))
+            {
+                EPA(simplex, colliderA, transformA, colliderB, transformB, info);
+                return info;
+            }
         }
+
+        info.status = CollisionInfo::Status::GJKFailed;
+        return info;
     }
-    glm::vec3 Solver::Minkowski(const Collider& collider1, const Transform& transform1, const Collider& collider2, const Transform& transform2, glm::vec3 direction)
-    {
-        return collider1.GetWorldSupport(transform1, direction) - collider2.GetWorldSupport(transform2, -direction);
-    }
-    bool Solver::SameDirection(const glm::vec3& direction, const glm::vec3& vector) { return glm::dot(direction, vector) > 0; }
+    bool Solver::SameDirection(const glm::vec3& vector, const glm::vec3& direction) { return glm::dot(vector, direction) > 0; }
     bool Solver::NextSimplex(Simplex& simplex, glm::vec3& direction)
     {
         switch (simplex.size())
@@ -37,8 +50,8 @@ namespace Engine
             case 2: return Line(simplex, direction);
             case 3: return Triangle(simplex, direction);
             case 4: return Tetrahedron(simplex, direction);
+            default: return false;
         }
-        return false;
     }
     bool Solver::Line(Simplex& simplex, glm::vec3& direction)
     {
@@ -106,7 +119,7 @@ namespace Engine
         glm::vec3 ABC = glm::cross(AB, AC);
         glm::vec3 ACD = glm::cross(AC, AD);
         glm::vec3 ADB = glm::cross(AD, AB);
-    
+
         if (SameDirection(ABC, AO)) return Triangle(simplex = { A, B, C }, direction);
         if (SameDirection(ACD, AO)) return Triangle(simplex = { A, C, D }, direction);
         if (SameDirection(ADB, AO)) return Triangle(simplex = { A, D, B }, direction);
@@ -114,7 +127,7 @@ namespace Engine
         return true;
     }
     
-    Solver::Collision Solver::EPA(const Simplex& simplex, const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB)
+    void Solver::EPA(const Simplex& simplex, const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB, CollisionInfo& info)
     {
         std::vector<glm::vec3> polytope(simplex.begin(), simplex.end());
         std::vector<size_t> faces = {
@@ -127,24 +140,27 @@ namespace Engine
         auto [normals, minFace] = GetFaceNormals(polytope, faces);
 
         glm::vec3  minNormal;
-        float minDistance = FLT_MAX;
+        float minDistance = std::numeric_limits<float>::max();
+        constexpr const float epsilon = 0.01f;
         
-        while (minDistance == FLT_MAX)
+        size_t iteration = 0;
+        while (++iteration <= s_MaxEPAIterations && minDistance == std::numeric_limits<float>::max())
         {
-            minNormal   = glm::vec3(normals[minFace]);
+            minNormal = glm::vec3(normals[minFace]);
             minDistance = normals[minFace].w;
     
-            glm::vec3 support = Minkowski(colliderA, transformA, colliderB, transformB, minNormal);
+            glm::vec3 support = GetSupport(colliderA, transformA, colliderB, transformB, minNormal);
             float sDistance = glm::dot(minNormal, support);
     
-            if (abs(sDistance - minDistance) > 0.001f)
+            if (std::abs(sDistance - minDistance) > epsilon)
             {
-                minDistance = FLT_MAX;
+                minDistance = std::numeric_limits<float>::max();
                 std::vector<std::pair<size_t, size_t>> uniqueEdges;
 
                 for (size_t i = 0; i < normals.size(); i++)
                 {
-                    if (SameDirection(normals[i], support)) {
+                    if (SameDirection(normals[i], support))
+                    {
                         size_t f = i * 3;
 
                         AddIfUniqueEdge(uniqueEdges, faces, f,     f + 1);
@@ -169,11 +185,18 @@ namespace Engine
                     newFaces.push_back(edgeIndex2);
                     newFaces.push_back(polytope.size());
                 }
+
+                if (newFaces.empty())
+                {
+                    info.status = CollisionInfo::Status::EPAFailed;
+                    return;
+                }
                 
                 polytope.push_back(support);
 
                 auto [newNormals, newMinFace] = GetFaceNormals(polytope, newFaces);
-                float oldMinDistance = FLT_MAX;
+
+                float oldMinDistance = std::numeric_limits<float>::max();
                 for (size_t i = 0; i < normals.size(); i++)
                 {
                     if (normals[i].w < oldMinDistance)
@@ -185,49 +208,55 @@ namespace Engine
     
                 if (newNormals[newMinFace].w < oldMinDistance) minFace = newMinFace + normals.size();
     
-                faces  .insert(faces  .end(), newFaces  .begin(), newFaces  .end());
+                faces.insert(faces.end(), newFaces.begin(), newFaces.end());
                 normals.insert(normals.end(), newNormals.begin(), newNormals.end());
 		    }
+            else
+            {
+                info.depth = minDistance + epsilon;
+                info.normal = minNormal;
+                info.status = CollisionInfo::Status::Colliding;
+                return;
+            }
 	    }
- 
-        Collision collision;
- 
-        collision.normal = minNormal;
-        collision.depth = minDistance + 0.001f;
-        collision.colliding = true;
-    
-        return collision;
+
+        info.status = CollisionInfo::Status::EPAFailed;
     }
     std::pair<std::vector<glm::vec4>, size_t> Solver::GetFaceNormals(const std::vector<glm::vec3>& polytope, const std::vector<size_t>& faces)
     {
         std::vector<glm::vec4> normals;
-        size_t minTriangle = 0;
-        float  minDistance = FLT_MAX;
+        float min = std::numeric_limits<float>::max();
+        size_t index = 0;
 
-        for (size_t i = 0; i < faces.size(); i += 3) {
-            glm::vec3 a = polytope[faces[i    ]];
-            glm::vec3 b = polytope[faces[i + 1]];
-            glm::vec3 c = polytope[faces[i + 2]];
+        glm::vec3 A;
+        glm::vec3 B;
+        glm::vec3 C;
 
-            glm::vec3 normal = glm::normalize(glm::cross(b - a, c - a));
-            float distance = glm::dot(normal, a);
+        for (size_t i = 0; i < faces.size(); i += 3)
+        {
+            A = polytope[faces[i]];
+            B = polytope[faces[i + 1]];
+            C = polytope[faces[i + 2]];
+
+            glm::vec3 normal = glm::normalize(glm::cross(B - A, C - A));
+            float distance = glm::dot(normal, A);
 
             if (distance < 0) 
             {
-                normal   *= -1;
+                normal *= -1;
                 distance *= -1;
             }
 
             normals.emplace_back(normal, distance);
 
-            if (distance < minDistance)
+            if (distance < min)
             {
-                minTriangle = i / 3;
-                minDistance = distance;
+                min = distance;
+                index = i / 3;
             }
         }
 
-        return { normals, minTriangle };
+        return { normals, index };
     }
     void Solver::AddIfUniqueEdge(std::vector<std::pair<size_t, size_t>>& edges, const std::vector<size_t>& faces, size_t a, size_t b)
     {
@@ -243,10 +272,11 @@ namespace Engine
         {
             if (!physics.m_Stationary)
             {
+                transform.RotateBy(deltaTime, deltaTime, deltaTime);
                 physics.m_Force = glm::vec3(0);
                 physics.m_Force += glm::vec3(0, 0, -1) * m_Gravity * physics.m_Mass;
                 
-                physics.m_Velocity += physics.m_Force / physics.m_Mass * deltaTime;
+                physics.m_Velocity += (physics.m_Force / physics.m_Mass) * deltaTime;
                 physics.m_Velocity *= (1.0f - physics.m_Drag * deltaTime);
 
                 transform.TranslateBy(physics.m_Velocity * deltaTime);
@@ -257,12 +287,10 @@ namespace Engine
             for (auto [handleB, transformB, physicsB] : view)
             {
                 if (handleA == handleB) continue;
-                if (physicsA.m_Stationary && physicsB.m_Stationary) continue; 
-                if (GJK(physicsA.GetCollider(), transformA, physicsB.GetCollider(), transformB))
-                {
-                    std::cout << std::format("Object {} collided with object {}!\n", (int) handleA, (int) handleB);
-                    Collision collision = EPA(m_Simplex, physicsA.GetCollider(), transformA, physicsB.GetCollider(), transformB);
-                    
+                if (physicsA.IsStationary() && physicsB.IsStationary()) continue; 
+                CollisionInfo collision = GJK(physicsA.GetCollider(), transformA, physicsB.GetCollider(), transformB);
+                if (collision)
+                {                    
                     glm::vec3 relativeVelocity = physicsB.m_Velocity - physicsA.m_Velocity;
                     float velocityAlongNormal = glm::dot(relativeVelocity, collision.normal);
                     glm::vec3 impulse;
@@ -294,8 +322,11 @@ namespace Engine
                         physicsB.m_Velocity += impulse / physicsB.m_Mass;
                         transformB.TranslateBy(seperator * 0.5f);
                     }
-                    std::cout << std::format("Object A {} velocity is vec3({}, {}, {})\n", (int) handleA, physicsA.m_Velocity.x, physicsA.m_Velocity.y, physicsA.m_Velocity.z);
-                    std::cout << std::format("Object B {} velocity is vec3({}, {}, {})\n", (int) handleB, physicsB.m_Velocity.x, physicsB.m_Velocity.y, physicsB.m_Velocity.z);
+                }
+                else
+                {
+                    if (collision.status == CollisionInfo::Status::GJKFailed) std::cout << std::format("GJK failed between object {} and {}\n", (int) handleA, (int) handleB);
+                    else if (collision.status == CollisionInfo::Status::EPAFailed) std::cout << std::format("EPA failed between object {} and {}\n", (int) handleA, (int) handleB);
                 }
             }
         }

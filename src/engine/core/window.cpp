@@ -42,6 +42,9 @@ namespace Engine
         mp_Window = glfwCreateWindow(m_Width, m_Height, m_Title.c_str(), nullptr, nullptr);
         glfwDefaultWindowHints();
         if (!mp_Window) throw std::runtime_error("Could not create window.");
+        // glfwMakeContextCurrent(mp_Window);
+        // glfwSwapInterval(0);
+        // glfwMakeContextCurrent(s_MainWindow);
         HGLRC context = glfwGetWGLContext(mp_Window);
         wglDeleteContext(context);
         glfwSetWindowUserPointer(mp_Window, this);

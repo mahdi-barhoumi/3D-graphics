@@ -64,4 +64,20 @@ namespace Engine
         glm::vec3 GetSupport(const glm::vec3& direction) const override;
 
     };
+
+    class SphereCollider : public Collider
+    {
+        private:
+        
+        float m_Radius = 1;
+        
+        public:
+        
+        SphereCollider() = default;
+        SphereCollider(float radius);
+        ~SphereCollider() = default;
+
+        glm::vec3 GetSupport(const glm::vec3& direction) const override;
+
+    };
 }
