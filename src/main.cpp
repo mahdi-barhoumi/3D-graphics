@@ -38,18 +38,21 @@ int main(void)
     }
 
     {
-        Handle handle = world.Create();
-        Object surface = world.Get(handle);
-        surface.Add<Transform>(Transform());
+        Handle surfaceHandle = world.Create();
+        Object surface = world.Get(surfaceHandle);
+        Transform surfaceTransform = Transform();
+        surface.Add<Transform>(surfaceTransform);
         surface.Add<Mesh>(Mesh("./assets/meshes/surface.obj"));
         surface.Add<Texture>(Texture("./assets/textures/stone.png"));
+        surface.Add<Physics>(Physics(PlaneCollider(100), true));
     }
 
     {
         Handle cubeHandle = world.Create();
         Object cube = world.Get(cubeHandle);
         Transform cubeTransform;
-        cubeTransform.TranslateTo(5, 5, 1);
+        cubeTransform.TranslateTo(-10, -10, 20);
+        cubeTransform.ScaleTo(2, 2, 2);
         cube.Add<Input>(Input(window));
         cube.Add<Transform>(cubeTransform);
         cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
@@ -57,17 +60,58 @@ int main(void)
         cube.Add<Physics>(Physics(CubeCollider(2)));
     }
 
+    // {
+    //     Handle cubeHandle = world.Create();
+    //     Object cube = world.Get(cubeHandle);
+    //     Transform cubeTransform;
+    //     cubeTransform.m_Orientation.w = -0.549940646f;
+    //     cubeTransform.m_Orientation.x = -0.465389937f;
+    //     cubeTransform.m_Orientation.y = -0.531535745f;
+    //     cubeTransform.m_Orientation.z = -0.445474297f;
+    //     cubeTransform.m_Position.x = 1.81624949;
+    //     cubeTransform.m_Position.y = 1.68110275;
+    //     cubeTransform.m_Position.z = 1.16594315;
+    //     cube.Add<Transform>(cubeTransform);
+    //     cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
+    //     cube.Add<Texture>(Texture("./assets/textures/wood.png"));
+    //     cube.Add<Physics>(Physics(CubeCollider(2), false));        
+    // }
+
+    // {
+    //     Handle cubeHandle = world.Create();
+    //     Object cube = world.Get(cubeHandle);
+    //     Transform cubeTransform;
+    //     cubeTransform.m_Orientation.w = -0.459496379f;
+    //     cubeTransform.m_Orientation.x = -0.445305735f;
+    //     cubeTransform.m_Orientation.y = -0.511946917f;
+    //     cubeTransform.m_Orientation.z = -0.573128462f;
+    //     cubeTransform.m_Position.x = -0.15900816;
+    //     cubeTransform.m_Position.y = -0.501099348;
+    //     cubeTransform.m_Position.z = 1.09695005;
+    //     cube.Add<Transform>(cubeTransform);
+    //     cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
+    //     cube.Add<Texture>(Texture("./assets/textures/wood.png"));
+    //     cube.Add<Physics>(Physics(CubeCollider(2), false));        
+    // }
+
+    for (int i = 0; i < 5; ++i)
     {
-        Handle cubeHandle = world.Create();
-        Object cube = world.Get(cubeHandle);
-        Transform cubeTransform;
-        cubeTransform.TranslateTo(-5, -5, 1);
-        cube.Add<Transform>(cubeTransform);
-        cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
-        cube.Add<Texture>(Texture("./assets/textures/stone.png"));
-        cube.Add<Physics>(Physics(CubeCollider(2)));
+        for (int j = 0; j < 5; ++j)
+        {
+            Handle cubeHandle = world.Create();
+            Object cube = world.Get(cubeHandle);
+            Transform cubeTransform;
+            cubeTransform.TranslateTo(2 * i - 10,  2 * j - 10, 10.0f);
+            cube.Add<Transform>(cubeTransform);
+            cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
+            cube.Add<Texture>(Texture("./assets/textures/wood.png"));
+            cube.Add<Physics>(Physics(CubeCollider(2)));
+        }
     }
 
+    float deltaTime;
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     while (!window.ShouldClose())
     {
         window.ProcessEvents();
@@ -147,9 +191,13 @@ int main(void)
                 camera.Pan(- movement.deltaX * sensitivity);
                 camera.Tilt(movement.deltaY * sensitivity);
             }
-
         }
-        solver.Solve(world, 0);
+        stop = std::chrono::high_resolution_clock::now();
+        deltaTime = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+        start = std::chrono::high_resolution_clock::now();
+        deltaTime *= 1e-9;
+        window.SetTitle(format("3D, FPS: {:.2f}", 1 / deltaTime));
+        solver.Solve(world, deltaTime);
         renderer.Render(world, window);
         window.SwapBuffers();
     }

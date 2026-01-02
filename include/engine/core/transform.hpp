@@ -6,7 +6,7 @@ namespace Engine
 {
     class Transform : public Component
     {
-        private:
+        public:
 
         glm::vec3 m_Scale = glm::vec3(1);
         glm::vec3 m_Position = glm::vec3(0);
@@ -15,6 +15,8 @@ namespace Engine
         public:
 
         glm::vec3 GetPosition() const;
+        glm::quat GetOrientation() const;
+        glm::quat GetInverseOrientation() const;
         glm::mat4 GetScalingMatrix() const;
         glm::mat4 GetInverseScalingMatrix() const;
         glm::mat4 GetRotationMatrix() const;
@@ -30,6 +32,8 @@ namespace Engine
         void ScaleBy(float scalarX, float scalarY, float scalarZ);
         void TranslateTo(float x, float y, float z);
         void TranslateBy(float deltaX, float deltaY, float deltaZ);
+        void TranslateTo(glm::vec3 position);
+        void TranslateBy(glm::vec3 delta);
 
     };
 }

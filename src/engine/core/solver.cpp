@@ -1,65 +1,105 @@
 #include <engine/core/solver.hpp>
-#include <engine/core/physics.hpp>
 
 #include <string>
 #include <iostream>
+#include <random>
 
 namespace Engine
 {
-    bool Solver::GJK(const Collider& collider1, const Transform& transform1, const Collider& collider2, const Transform& transform2)
+    Solver::Support Solver::GetSupport(const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB, glm::vec3 direction)
     {
-        glm::vec3 initial = transform1.GetPosition() - transform2.GetPosition();
-        glm::vec3 support = Minkowski(collider1, transform1, collider2, transform2, initial);
-
-        Simplex simplex;
-        simplex.push_front(support);
-
-        glm::vec3 direction = -support;
-        while (true)
-        {
-            support = Minkowski(collider1, transform1, collider2, transform2, direction);
+        Support support;
+        support.pointFromA = colliderA.GetWorldSupport(transformA, direction);
+        support.pointFromB = colliderB.GetWorldSupport(transformB, -direction);
+        support.point = support.pointFromA - support.pointFromB;
+        return support;
+    }
     
-            if (glm::dot(support, direction) <= 0) return false;
-
-            simplex.push_front(support);
-            if (NextSimplex(simplex, direction)) return true;
-        }
-    }
-    glm::vec3 Solver::Minkowski(const Collider& collider1, const Transform& transform1, const Collider& collider2, const Transform& transform2, glm::vec3 direction)
+    bool Solver::SameDirection(const glm::vec3& u, const glm::vec3& v) { return glm::dot(u, v) > 0.0f; }
+    glm::vec3 Solver::ConvertToBarycentric(const glm::vec3& point, const glm::vec3& a, const glm::vec3& b, const glm::vec3& c)
     {
-        return collider1.GetWorldSupport(transform1, direction) - collider2.GetWorldSupport(transform2, -direction);
+        glm::vec3 V0 = b - a;
+        glm::vec3 V1 = c - a;
+        glm::vec3 V2 = point - a;
+        
+        float D00 = glm::dot(V0, V0);
+        float D01 = glm::dot(V0, V1);
+        float D11 = glm::dot(V1, V1);
+        float D20 = glm::dot(V2, V0);
+        float D21 = glm::dot(V2, V1);
+        
+        float denominator = D00 * D11 - D01 * D01;
+        
+        // Degenerate triangle, return equal weights
+        if (std::abs(denominator) < 1e-10f) return glm::vec3(1.0f / 3.0f, 1.0f / 3.0f, 1.0f / 3.0f);
+        
+        float v = (D11 * D20 - D01 * D21) / denominator;
+        float w = (D00 * D21 - D01 * D20) / denominator;
+        float u = 1.0f - v - w;
+        
+        return glm::vec3(u, v, w);
     }
-    bool Solver::SameDirection(const glm::vec3& direction, const glm::vec3& vector) { return glm::dot(direction, vector) > 0; }
+
+    Solver::CollisionInfo Solver::GJK(const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB)
+    {
+        Simplex simplex = Simplex();
+
+        glm::vec3 direction = transformA.GetPosition() - transformB.GetPosition() + glm::vec3(1e-6f);
+        Support support = GetSupport(colliderA, transformA, colliderB, transformB, direction);
+
+        simplex.Push(support);
+        direction = -support.point;
+
+        for (size_t iteration = 0; iteration < s_MaxGJKIterations; ++iteration)
+        {
+            support = GetSupport(colliderA, transformA, colliderB, transformB, direction);
+
+            if (!SameDirection(support.point, direction))
+            {
+                CollisionInfo info;
+                info.status = CollisionInfo::Status::Separated;
+                return info;
+            }
+
+            simplex.Push(support);
+
+            if (NextSimplex(simplex, direction)) return EPA(simplex, colliderA, transformA, colliderB, transformB);
+        }
+
+        CollisionInfo info;
+        info.status = CollisionInfo::Status::GJKFailed;
+        return info;
+    }
     bool Solver::NextSimplex(Simplex& simplex, glm::vec3& direction)
     {
-        switch (simplex.size())
+        switch (simplex.count)
         {
             case 2: return Line(simplex, direction);
             case 3: return Triangle(simplex, direction);
             case 4: return Tetrahedron(simplex, direction);
+            default: return false;
         }
-        return false;
     }
     bool Solver::Line(Simplex& simplex, glm::vec3& direction)
     {
-        glm::vec3 A = simplex[0];
-        glm::vec3 B = simplex[1];
+        glm::vec3 A = simplex.A.point;
+        glm::vec3 B = simplex.B.point;
         glm::vec3 AB = B - A;
         glm::vec3 AO = -A;
     
         if (SameDirection(AB, AO)) direction = glm::cross(glm::cross(AB, AO), AB);
         else
         {
-            simplex = { A };
+            simplex.count = 1;
             direction = AO;
         }
         return false;
     }
     bool Solver::Triangle(Simplex& simplex, glm::vec3& direction)
     {
-        glm::vec3 A = simplex[0];
-        glm::vec3 B = simplex[1];
-        glm::vec3 C = simplex[2];
+        glm::vec3 A = simplex.A.point;
+        glm::vec3 B = simplex.B.point;
+        glm::vec3 C = simplex.C.point;
 
         glm::vec3 AB = B - A;
         glm::vec3 AC = C - A;
@@ -71,20 +111,29 @@ namespace Engine
         {
             if (SameDirection(AC, AO))
             {
-                simplex = { A, C };
+                simplex.count = 2;
+                simplex.B = simplex.C;
                 direction = glm::cross(glm::cross(AC, AO), AC);
             }
-            else return Line(simplex = { A, B }, direction);
+            else
+            {
+                simplex.count = 2;
+                return Line(simplex, direction);
+            }
         }
         else
         {
-            if (SameDirection(glm::cross(AB, ABC), AO)) return Line(simplex = { A, B }, direction);
+            if (SameDirection(glm::cross(AB, ABC), AO))
+            {
+                simplex.count = 2;
+                return Line(simplex, direction);
+            }
             else
             {
                 if (SameDirection(ABC, AO)) direction = ABC;
                 else
                 {
-                    simplex = { A, C, B };
+                    std::swap(simplex.B, simplex.C);
                     direction = -ABC;
                 }
             }
@@ -93,10 +142,10 @@ namespace Engine
     }
     bool Solver::Tetrahedron(Simplex& simplex, glm::vec3& direction)
     {
-        glm::vec3 A = simplex[0];
-        glm::vec3 B = simplex[1];
-        glm::vec3 C = simplex[2];
-        glm::vec3 D = simplex[3];
+        glm::vec3 A = simplex.A.point;
+        glm::vec3 B = simplex.B.point;
+        glm::vec3 C = simplex.C.point;
+        glm::vec3 D = simplex.D.point;
 
         glm::vec3 AB = B - A;
         glm::vec3 AC = C - A;
@@ -106,22 +155,228 @@ namespace Engine
         glm::vec3 ABC = glm::cross(AB, AC);
         glm::vec3 ACD = glm::cross(AC, AD);
         glm::vec3 ADB = glm::cross(AD, AB);
-    
-        if (SameDirection(ABC, AO)) return Triangle(simplex = { A, B, C }, direction);
-        if (SameDirection(ACD, AO)) return Triangle(simplex = { A, C, D }, direction);
-        if (SameDirection(ADB, AO)) return Triangle(simplex = { A, D, B }, direction);
-    
+
+        if (SameDirection(ABC, AO))
+        {
+            simplex.count = 3;
+            return Triangle(simplex, direction);
+        }
+        if (SameDirection(ACD, AO))
+        {
+            simplex.count = 3;
+            simplex.B = simplex.C;
+            simplex.C = simplex.D;
+            return Triangle(simplex, direction);
+        }
+        if (SameDirection(ADB, AO))
+        {
+            simplex.count = 3;
+            simplex.C = simplex.B;
+            simplex.B = simplex.D;
+            return Triangle(simplex, direction);
+        }
+
         return true;
     }
+    
+    Solver::CollisionInfo Solver::EPA(const Simplex& simplex, const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB)
+    {
+        std::vector<Support> polytope;
+        polytope.reserve(64);
+        std::vector<Face> faces;
+        faces.reserve(64);
+        std::vector<std::pair<size_t, size_t>> uniqueEdges;
+        uniqueEdges.reserve(64);
+
+        polytope.push_back(simplex.A);
+        polytope.push_back(simplex.B);
+        polytope.push_back(simplex.C);
+        polytope.push_back(simplex.D);
+        faces.push_back(Face(0, 1, 2, polytope));   // Add face ABC to the polytope.
+        faces.push_back(Face(0, 3, 1, polytope));   // Add face ADB to the polytope.
+        faces.push_back(Face(0, 2, 3, polytope));   // Add face ACD to the polytope.
+        faces.push_back(Face(1, 3, 2, polytope));   // Add face BDC to the polytope.
+
+        Support support;
+        glm::vec3 direction;
+        size_t closestFace;
+        float minDistance;
+        float distance;
+
+        for (size_t iteration = 0; iteration < s_MaxEPAIterations; ++iteration)
+        {
+            // Find closest face to the origin.
+            closestFace = 0;
+            minDistance = faces[0].distance;
+            for (size_t index = 1; index < faces.size(); ++index)
+            {
+                if (faces[index].distance < minDistance)
+                {
+                    minDistance = faces[index].distance;
+                    closestFace = index;
+                }
+            }
+
+            // Search towards the normal of the face that's closest to origin.
+            direction = faces[closestFace].normal;
+            support = GetSupport(colliderA, transformA, colliderB, transformB, direction);
+
+            if (glm::dot(support.point, direction) - minDistance < 1e-3f)
+            {
+                CollisionInfo info;
+                info.status = CollisionInfo::Status::Colliding;
+                info.depth = minDistance;
+                info.normal = faces[closestFace].normal;
+                
+                // Project origin onto the closest face plane
+                glm::vec3 originProjection = minDistance * faces[closestFace].normal;
+                
+                glm::vec3 barycentricCoordinates = ConvertToBarycentric(originProjection,
+                                                    polytope[faces[closestFace].a].point,
+                                                    polytope[faces[closestFace].b].point,
+                                                    polytope[faces[closestFace].c].point
+                                                );
+                
+                info.contactPointA = polytope[faces[closestFace].a].pointFromA * barycentricCoordinates.x +
+                                     polytope[faces[closestFace].b].pointFromA * barycentricCoordinates.y +
+                                     polytope[faces[closestFace].c].pointFromA * barycentricCoordinates.z;
+                
+                info.contactPointB = polytope[faces[closestFace].a].pointFromB * barycentricCoordinates.x +
+                                     polytope[faces[closestFace].b].pointFromB * barycentricCoordinates.y +
+                                     polytope[faces[closestFace].c].pointFromB * barycentricCoordinates.z;
+                
+                return info;
+            }
+
+            uniqueEdges.clear();
+            for (size_t index = 0; index < faces.size();)
+            {
+                if (SameDirection(faces[index].normal, support.point - polytope[faces[index].a].point))
+                {
+                    // Add unique edges only, if a reverse edge aleady exists then remove it (both triangles it belonged to are removed).
+                    AddUniqueEdge(uniqueEdges, faces[index].a, faces[index].b);
+                    AddUniqueEdge(uniqueEdges, faces[index].b, faces[index].c);
+                    AddUniqueEdge(uniqueEdges, faces[index].c, faces[index].a);
+
+                    // Remove the face.
+                    faces[index] = faces.back();
+                    faces.pop_back();
+                }
+                else ++index;
+            }
+
+            // We can now add the new support point into the polytope.
+            polytope.push_back(support);
+            for (auto [a, b] : uniqueEdges) faces.push_back(Face(a, b, polytope.size() - 1, polytope));
+        }
+
+        CollisionInfo info;
+        info.status = CollisionInfo::Status::EPAFailed;
+        return info;
+    }
+    void Solver::AddUniqueEdge(std::vector<std::pair<size_t, size_t>>& edges, size_t a, size_t b)
+    {
+        auto reverse = std::find(edges.begin(), edges.end(), std::make_pair(b, a));
+        if (reverse != edges.end()) edges.erase(reverse);
+        else edges.emplace_back(a, b);
+    }
+
+    void Solver::ResolveCollision(Physics& physicsA, Transform& transformA, Physics& physicsB, Transform& transformB, const CollisionInfo& collision)
+    {
+        // Calculate relative positions from center of mass to contact point.
+        glm::vec3 relativeA = collision.contactPointA - transformA.GetPosition();
+        glm::vec3 relativeB = collision.contactPointB - transformB.GetPosition();
+        
+        // Calculate velocity at contact point (linear + angular contribution).
+        glm::vec3 angularVelocityA = glm::cross(physicsA.GetAngularVelocity(), relativeA);
+        glm::vec3 angularVelocityB = glm::cross(physicsB.GetAngularVelocity(), relativeB);
+        
+        glm::vec3 fullVelocityA = physicsA.GetVelocity() + angularVelocityA;
+        glm::vec3 fullVelocityB = physicsB.GetVelocity() + angularVelocityB;
+        
+        glm::vec3 relativeVelocity = fullVelocityB - fullVelocityA;
+        float velocityAlongNormal = glm::dot(relativeVelocity, collision.normal);
+        
+        // Don't resolve if objects are separating.
+        if (velocityAlongNormal > 0) return;
+        
+        // Calculate angular effect on impulse.
+        glm::vec3 inertiaA = glm::cross(
+            physicsA.GetInverseInertiaTensor() * glm::cross(relativeA, collision.normal),
+            relativeA
+        );
+        glm::vec3 inertiaB = glm::cross(
+            physicsB.GetInverseInertiaTensor() * glm::cross(relativeB, collision.normal),
+            relativeB
+        );
+        float angularEffect = glm::dot(inertiaA + inertiaB, collision.normal);
+        
+        // Calculate impulse magnitude.
+        float e = std::min(physicsA.GetRestitution(), physicsB.GetRestitution());
+        float j = -(1.0f + e) * velocityAlongNormal;
+        j /= (physicsA.GetInverseMass() + physicsB.GetInverseMass() + angularEffect);
+        
+        glm::vec3 impulse = j * collision.normal;
+        
+        // Apply linear impulses.
+        if (!physicsA.IsStationary()) physicsA.ApplyLinearImpulse(-impulse);
+        if (!physicsB.IsStationary()) physicsB.ApplyLinearImpulse(impulse);
+        
+        // Apply angular impulses.
+        if (!physicsA.IsStationary()) physicsA.ApplyAngularImpulse(glm::cross(relativeA, -impulse));
+        if (!physicsB.IsStationary()) physicsB.ApplyAngularImpulse(glm::cross(relativeB, impulse));
+        
+        // Separate objects.
+        float totalInverseMass = physicsA.GetInverseMass() + physicsB.GetInverseMass();
+        if (totalInverseMass > 0)
+        {
+            if (!physicsA.IsStationary())
+                transformA.TranslateBy(-collision.normal * collision.depth * (physicsA.GetInverseMass() / totalInverseMass));
+            if (!physicsB.IsStationary())
+                transformB.TranslateBy(collision.normal * collision.depth * (physicsB.GetInverseMass() / totalInverseMass));
+        }
+    }
+
+    Solver::Solver(float gravity) : m_Gravity(gravity) {}
+    float Solver::GetGravity() const { return m_Gravity; }
+    void Solver::SetGravity(float gravity) { m_Gravity = gravity; }
     void Solver::Solve(World& world, float deltaTime)
     {
+        deltaTime = std::clamp(deltaTime, 0.0f, 1.0f);
         auto view = world.View<Transform, Physics>();
-        for (auto [handle1, transform1, physics1] : view)
+        for (auto [handle, transform, physics] : view)
         {
-            for (auto [handle2, transform2, physics2] : view)
+            if (physics.IsStationary()) continue;
+
+            physics.ApplyForce(m_Gravity * physics.GetMass() * glm::vec3(0, 0, -1));
+            
+            physics.Integrate(deltaTime);
+
+            transform.TranslateBy(physics.GetVelocity() * deltaTime);
+            
+            glm::vec3 angularVelocity = physics.GetAngularVelocity();
+            float deltaAngle = glm::length(angularVelocity) * deltaTime;
+            if (deltaAngle > 1e-6f)
             {
-                if (handle1 == handle2) continue;
-                if (GJK(physics1.GetCollider(), transform1, physics2.GetCollider(), transform2)) std::cout << std::format("{} and {} collided!\n", (int) handle1, (int) handle2);
+                glm::vec3 axis = glm::normalize(angularVelocity);
+                transform.RotateAround(axis, deltaAngle);
+            }
+            
+            physics.ResetAccumulators();
+        }
+        for (auto [handleA, transformA, physicsA] : view)
+        {
+            for (auto [handleB, transformB, physicsB] : view)
+            {
+                if (handleA <= handleB) continue;
+                if (physicsA.IsStationary() && physicsB.IsStationary()) continue; 
+                CollisionInfo collision = GJK(physicsA.GetCollider(), transformA, physicsB.GetCollider(), transformB);
+                if (collision) ResolveCollision(physicsA, transformA, physicsB, transformB, collision);
+                else
+                {
+                    if (collision.status == CollisionInfo::Status::GJKFailed) std::cout << std::format("GJK failed between object {} and {}\n", (int) handleA, (int) handleB);
+                    else if (collision.status == CollisionInfo::Status::EPAFailed) std::cout << std::format("EPA failed between object {} and {}\n", (int) handleA, (int) handleB);
+                }
             }
         }
     }
