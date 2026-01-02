@@ -32,6 +32,11 @@ debug: CFLAGS += -g -O0
 debug: CXXFLAGS += -g -O0
 debug: Application
 
+# Release build
+release: CFLAGS += -O3
+release: CXXFLAGS += -O3
+release: Application
+
 Application: $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
 

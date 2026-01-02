@@ -15,6 +15,8 @@ namespace Engine
         public:
 
         glm::vec3 GetPosition() const;
+        glm::quat GetOrientation() const;
+        glm::quat GetInverseOrientation() const;
         glm::mat4 GetScalingMatrix() const;
         glm::mat4 GetInverseScalingMatrix() const;
         glm::mat4 GetRotationMatrix() const;

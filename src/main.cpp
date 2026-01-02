@@ -40,23 +40,24 @@ int main(void)
     {
         Handle surfaceHandle = world.Create();
         Object surface = world.Get(surfaceHandle);
-        surface.Add<Transform>(Transform());
+        Transform surfaceTransform = Transform();
+        surface.Add<Transform>(surfaceTransform);
         surface.Add<Mesh>(Mesh("./assets/meshes/surface.obj"));
         surface.Add<Texture>(Texture("./assets/textures/stone.png"));
-        surface.Add<Physics>(Physics(PlaneCollider(40)));
+        surface.Add<Physics>(Physics(PlaneCollider(100), true));
     }
 
     {
-        Handle sphereHandle = world.Create();
-        Object sphere = world.Get(sphereHandle);
-        Transform sphereTransform;
-        sphereTransform.TranslateTo(5, 5, 10.0f);
-        sphereTransform.ScaleTo(2, 2, 2);
-        sphere.Add<Input>(Input(window));
-        sphere.Add<Transform>(sphereTransform);
-        sphere.Add<Mesh>(Mesh("./assets/meshes/sphere.obj"));
-        sphere.Add<Texture>(Texture("./assets/textures/dirt.png"));
-        sphere.Add<Physics>(Physics(SphereCollider(1), false));
+        Handle cubeHandle = world.Create();
+        Object cube = world.Get(cubeHandle);
+        Transform cubeTransform;
+        cubeTransform.TranslateTo(-10, -10, 20);
+        cubeTransform.ScaleTo(2, 2, 2);
+        cube.Add<Input>(Input(window));
+        cube.Add<Transform>(cubeTransform);
+        cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
+        cube.Add<Texture>(Texture("./assets/textures/dirt.png"));
+        cube.Add<Physics>(Physics(CubeCollider(2)));
     }
 
     // {
@@ -100,11 +101,11 @@ int main(void)
             Handle cubeHandle = world.Create();
             Object cube = world.Get(cubeHandle);
             Transform cubeTransform;
-            cubeTransform.TranslateTo(2 * i - 10,  2 * j - 10, 1.2f);
+            cubeTransform.TranslateTo(2 * i - 10,  2 * j - 10, 10.0f);
             cube.Add<Transform>(cubeTransform);
             cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
-            cube.Add<Texture>(Texture("./assets/textures/stone.png"));
-            cube.Add<Physics>(Physics(CubeCollider(2), false));
+            cube.Add<Texture>(Texture("./assets/textures/wood.png"));
+            cube.Add<Physics>(Physics(CubeCollider(2)));
         }
     }
 
@@ -134,6 +135,12 @@ int main(void)
                     break;
                     case Key::LeftArrow:
                         transform.TranslateBy(-0.1, 0, 0);
+                    break;
+                    case Key::LeftShift:
+                        transform.TranslateBy(0, 0, 0.1);
+                    break;
+                    case Key::LeftControl:
+                        transform.TranslateBy(0, 0, -0.1);
                     break;
                 }
             }
@@ -174,12 +181,6 @@ int main(void)
                     case Key::A:
                         camera.Roll(-0.5);
                     break;
-                    case Key::LeftShift:
-                        transform.TranslateBy(0, 0, 0.1);
-                    break;
-                    case Key::LeftControl:
-                        transform.TranslateBy(0, 0, -0.1);
-                    break;
                 }
             }
             Movement movement;
@@ -190,7 +191,6 @@ int main(void)
                 camera.Pan(- movement.deltaX * sensitivity);
                 camera.Tilt(movement.deltaY * sensitivity);
             }
-
         }
         stop = std::chrono::high_resolution_clock::now();
         deltaTime = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();

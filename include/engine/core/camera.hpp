@@ -13,7 +13,7 @@ namespace Engine
         float m_Tilt = 0.0f;
         float m_Roll = 0.0f;
         float m_NearZ = 0.1f;
-        float m_FarZ = 100.0f;
+        float m_FarZ = 1000.0f;
         float m_FOV = glm::radians(90.0f);
 
         public:
