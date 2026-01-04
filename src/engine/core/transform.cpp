@@ -2,6 +2,7 @@
 
 namespace Engine
 {
+    glm::vec3 Transform::GetScale() const { return m_Scale; }
     glm::vec3 Transform::GetPosition() const { return m_Position; }
     glm::quat Transform::GetOrientation() const { return m_Orientation; }
     glm::quat Transform::GetInverseOrientation() const { return glm::conjugate(m_Orientation); }

@@ -27,6 +27,7 @@ namespace Engine
         void PushMovementToInputs(const Movement& movement);
 
         static GLFWwindow* s_MainWindow;
+        static GLFWwindow* s_CurrentWindow;
         static GLFWwindow* Initialize();
         static void WindowSizeCallback(GLFWwindow* window, int width, int height);
         static void WindowCursorPositionCallback(GLFWwindow* window, double x, double y);

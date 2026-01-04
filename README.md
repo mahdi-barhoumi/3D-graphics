@@ -1,99 +1,199 @@
-# 3D Graphics Engine
+# 3D Graphics Engine 🔧
 
-A lightweight, modular C++ 3D graphics project / engine focused on learning and experimenting with real-time rendering concepts using OpenGL.
+**A lightweight, modular C++ 3D engine for learning and experimenting with real-time rendering, physics, and simple scene management.**
+
+---
 
 ## Table of Contents
 
 - [Overview](#overview)
-- [Features](#features)
-- [Repository Structure](#repository-structure)
-- [Prerequisites](#prerequisites)
-- [Building](#building)
-- [Running](#running)
-- [Project Layout & Key Components](#project-layout--key-components)
+- [Quick Start](#quick-start)
+- [Build & Run](#build--run)
+- [Controls](#controls)
+- [Architecture & Key Components](#architecture--key-components)
+- [Examples](#examples)
+- [Assets](#assets)
+- [Dependencies](#dependencies)
+- [Contributing & License](#contributing--license)
 
 ---
 
-## Overview
+## Overview ✅
 
-This project implements a small 3D engine with a focus on clarity and extensibility. The codebase includes a basic renderer, resource management (shaders, textures, meshes), scene/world management, and simple physics and input handling.
+This repository implements a small, self-contained 3D engine written in modern C++ (C++23). It includes:
 
-The repository contains both source code and vendor headers for common libraries (GLM, stb, GLFW, GLEW) to simplify building and experimentation.
+- A simple Entity-Component system (backed by entt)
+- Windowing and input (GLFW)
+- Shader, Mesh and Texture resource management
+- A basic renderer with a default shader and a grid shader
+- A physics solver using GJK + EPA for collision detection and response
+- Example scene construction and input-driven interactions
 
-## Features
+The code is intentionally compact and educational: it focuses on clarity and modularity so you can inspect and modify systems easily.
 
-- Basic scene and object system
-- Shader and resource management
-- Mesh loading and rendering
-- Simple camera and input handling
-- Basic physics/collision stubs and utilities
-- Example assets (shaders, meshes, textures)
+---
 
-## Repository Structure
+## Quick Start ⚡
 
-Top-level layout (abridged):
+Prerequisites:
 
-```
-/ (repo root)
-├─ include/            # Public headers and bundled 3rd-party headers
-├─ src/                # Implementation sources
-├─ assets/             # Shaders, meshes, textures
-├─ build/              # Default build directory (CMake / make targets)
-├─ tools/              # Utility tools and experiments
-├─ makefile            # Simple build entrypoint
-└─ README.md           # This file
-```
+- A C++23-capable compiler (GCC, Clang, MSVC)
+- make (or a build system of your choice)
+- OpenGL development headers and libraries (GLEW, GLFW)
 
-## Prerequisites
+Notes for Windows: Use MSYS2/MinGW or Visual Studio; the Makefile links against `opengl32`, `glew`, and `glfw` by default.
 
-- A C++20-compatible compiler (GCC, Clang, MSVC)
-- CMake (recommended)
-- OpenGL development environment
-- Recommended libraries (typically included in `include/`):
-  - GLFW
-  - GLEW
-  - GLM
-  - stb_image
+---
 
-On Windows, use MSYS2, Visual Studio, or another environment that supports CMake and your compiler of choice.
+## Build & Run 🔧
 
-> Note: The repository includes copies of several dependencies under `include/` to simplify getting started; system packages can be used as an alternative.
-
-## Building
-
-Recommended (CMake):
+Build using the included Makefile (recommended):
 
 ```bash
-# From project root
-cmake -S . -B build
-cmake --build build --config Release
-```
+# Debug build (useful for development)
+make debug
 
-If the repository provides a `Makefile`, you can also try:
+# Release build
+make release
 
-```bash
+# Default build
 make
 ```
 
-The produced executable will be placed in the build output directory. On Windows the executable will typically be under `build/` with a `.exe` extension; on Unix-like systems it will be `build/<executable>`.
-
-## Running
-
-After building, run the produced executable. Example (Unix):
+The Makefile compiles with `-std=c++23` and produces an executable named `Application` (or `Application.exe` on Windows). Run it from the repository root so the `assets/` directory is available:
 
 ```bash
-./build/main
+# Unix
+./Application
+# Windows
+Application.exe
 ```
 
-On Windows, run the generated `.exe` from the build folder (for example `build\Release\main.exe` or similar depending on the generator and configuration).
+Hint: `make debug` adds `-g -O0` for easier debugging. The Makefile also defines flags such as `-DGLEW_STATIC` and `-DSTB_IMAGE_IMPLEMENTATION`.
 
-The application will load assets from the `assets/` directory (shaders, meshes, textures). Ensure the working directory is set so that `assets/` is accessible at runtime.
+---
 
-## Project Layout & Key Components
+## Controls 🎮
 
-- `src/main.cpp` — Application entrypoint
-- `include/engine/core/` & `src/engine/core/` — Core engine systems: `window`, `renderer`, `camera`, `world`, `object`, `mesh`, `shader`, `texture`, `input`, `physics`, `light`, etc.
-- `include/engine/utils` & `src/engine/utils` — Helper utilities
-- `assets/` — Example shaders, meshes, textures used by demos and tests
+Example controls used by the demo scene (see `src/main.cpp`):
 
-This organization separates public headers (in `include/`) from implementation (`src/`) to make the core engine reusable and easier to integrate into other projects.
+- Camera movement: Z (forward), S (backward), D (right), Q (left)
+- Camera roll:    E (roll right), A (roll left)
+- Mouse movement: Pan / Tilt the camera
+- Physics forces: Arrow keys apply forces to physics-enabled objects
+  - UpArrow / DownArrow / LeftArrow / RightArrow
+  - LeftShift / LeftControl (apply Z-axis forces)
+
+> Note: the key mapping is exposed via `Engine::Key` (see `include/engine/core/input.hpp`).
+
+---
+
+## Architecture & Key Components 🏗️
+
+Important directories:
+
+- `include/engine/core/` — Public engine headers
+- `src/engine/core/`     — Engine implementation
+- `assets/`              — Shaders, meshes, textures
+
+Core concepts:
+
+- World & Entities: `Engine::World` creates and manages entities (handles). Use `World::Create()` and `World::Get(handle)` to add components.
+- Components: `Transform`, `Camera`, `Mesh`, `Texture`, `Physics`, `Input`, etc.
+- Renderer: `Engine::Renderer` holds default shaders and exposes `Render(World&, Window&)`.
+- Solver: `Engine::Solver` performs collision detection (GJK/EPA) and integrates physics.
+
+Key classes (brief):
+
+- `Engine::Window` — Create windows, process events, swap buffers
+- `Engine::Input` — Queues keyboard and mouse movement events
+- `Engine::Camera` — FOV, projection matrix, pan/tilt/roll helpers
+- `Engine::Mesh` / `Engine::Texture` — Resource wrappers with caching
+- `Engine::Shader` — Load/compile GLSL, set uniforms, draw meshes
+- `Engine::Physics` — Per-object physical properties and forces
+
+---
+
+## Examples — Minimal scene (inspired by `src/main.cpp`) 💡
+
+```cpp
+using namespace Engine;
+
+World world;
+Window window("3D", 1280, 720);
+Renderer renderer;
+Solver solver;
+
+// Create a camera entity
+Handle cameraHandle = world.Create();
+Object camera = world.Get(cameraHandle);
+camera.Add<Transform>(Transform());
+camera.Add<Camera>(Camera());
+camera.Add<Input>(Input(window));
+
+// Create a textured mesh entity
+Handle cubeHandle = world.Create();
+Object cube = world.Get(cubeHandle);
+cube.Add<Transform>(Transform());
+cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
+cube.Add<Texture>(Texture("./assets/textures/wood.png"));
+cube.Add<Physics>(Physics(CubeCollider(2)));
+
+// Main loop: process events, solve physics, render
+while (!window.ShouldClose()) {
+  window.ProcessEvents();
+  solver.Solve(world, deltaTime);
+  renderer.Render(world, window);
+  window.SwapBuffers();
+}
+```
+
+This example highlights how the engine composes entities from components and runs a simple game loop.
+
+---
+
+## Assets 📁
+
+- Shaders: `assets/shaders/default/*` and `assets/shaders/grid/*`
+- Meshes: `assets/meshes/*.obj` (examples: `cube.obj`, `surface.obj`)
+- Textures: `assets/textures/*.png` (examples: `wood.png`, `dirt.png`, `stone.png`)
+
+The renderer expects these files at runtime — make sure the working directory contains the `assets/` folder.
+
+---
+
+## Dependencies & Bundled Libraries 📦
+
+This project bundles several headers under `include/` to simplify setup:
+
+- GLM (math)
+- GLFW (windowing/input)
+- GLEW (OpenGL extension wrangler)
+- stb_image (image loading)
+- entt (entity-component system)
+
+Linker flags in the Makefile: `-lglew -lglfw -lopengl32 -lgdi32 -luser32 -lkernel32` (Windows target shown).
+
+---
+
+## Contributing & License ✍️
+
+- Contributions are welcome — open issues or submit PRs for bug fixes, features, or documentation improvements.
+- There is **no explicit top-level license** file in this repository. Consider adding an appropriate LICENSE if you intend to release or share the project.
+
+---
+
+## Notes & Next Steps 🔭
+
+- The code is geared toward learning and small experiments; the renderer and physics solver are intentionally compact and not optimized for production.
+- Suggested improvements: better resource lifetime tracking, expanded shader examples, more robust build scripts (CMake), and tests for the physics solver.
+
+---
+
+If you'd like, I can:
+
+- Add a short usage example binary in `build/` or a small script to run the app ✅
+- Add a `CONTRIBUTING.md` and `LICENSE` file (choose a license) ✅
+- Improve the Makefile to support out-of-tree builds and platform detection ✅
+
+Tell me which of the above you'd like me to do next.

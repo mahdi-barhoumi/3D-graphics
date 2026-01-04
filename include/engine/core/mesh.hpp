@@ -9,6 +9,8 @@ namespace Engine
 {
     class Mesh : public Component
     {
+        friend class Shader;
+
         private:
 
         struct Allocation final
@@ -20,16 +22,11 @@ namespace Engine
 
             Allocation(const std::string& path);
             ~Allocation();
-
-            Allocation(const Allocation& other) = delete;
-            Allocation(Allocation&& other) = delete;
-            Allocation& operator=(const Allocation& other) = delete;
-            Allocation& operator=(Allocation&& other) = delete;
         };
 
         static std::unordered_map<std::string, std::weak_ptr<Allocation>> s_Cache;
 
-        std::shared_ptr<Allocation> mp_Allocation = nullptr;
+        std::shared_ptr<Allocation> mp_Allocation;
     
         public:
     
@@ -39,10 +36,7 @@ namespace Engine
         ~Mesh() = default;
         Mesh& operator=(const Mesh& other) = default;
 
-        void Draw() const;
-        void Bind() const;
-        static void Unbind();
-        static unsigned int GetAllocationCount();
+        static size_t GetAllocationCount();
         
     };
 }

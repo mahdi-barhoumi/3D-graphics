@@ -29,12 +29,22 @@ namespace Engine
         template<ColliderConcept T>
         Physics(T&& collider, bool stationary = false) : m_Collider(std::make_shared<T>(std::forward<T>(collider))), m_Stationary(stationary)
         {
+            if (m_Stationary)
+            {
+                m_Mass = std::numeric_limits<float>::infinity();
+                m_InverseMass = 0;
+            }
             m_CachedInertiaTensor = m_Collider->GetInertiaTensor(m_Mass);
             m_CachedInverseInertiaTensor = glm::inverse(m_CachedInertiaTensor);
         }
         template<ColliderConcept T>
         Physics(T&& collider, float mass, bool stationary = false) : m_Collider(std::make_shared<T>(std::forward<T>(collider))), m_Mass(mass), m_InverseMass(1 / mass), m_Stationary(stationary)
         {
+            if (m_Stationary)
+            {
+                m_Mass = std::numeric_limits<float>::infinity();
+                m_InverseMass = 0;
+            }
             m_CachedInertiaTensor = m_Collider->GetInertiaTensor(m_Mass);
             m_CachedInverseInertiaTensor = glm::inverse(m_CachedInertiaTensor);
         }

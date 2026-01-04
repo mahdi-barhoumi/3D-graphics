@@ -14,6 +14,7 @@ namespace Engine
 
         public:
 
+        glm::vec3 GetScale() const;
         glm::vec3 GetPosition() const;
         glm::quat GetOrientation() const;
         glm::quat GetInverseOrientation() const;

@@ -71,24 +71,13 @@ namespace Engine
     Mesh::Mesh(const std::string& path)
     {
         auto iterator = s_Cache.find(path);
-        if (iterator != s_Cache.end() && !iterator->second.expired())
-        {
-            mp_Allocation = iterator->second.lock();
-            return;
-        }
+        if (iterator != s_Cache.end() && (mp_Allocation = iterator->second.lock())) return;
         mp_Allocation = std::make_shared<Allocation>(path);
-        s_Cache[path] = std::weak_ptr<Allocation>(mp_Allocation);
+        s_Cache[path] = mp_Allocation;
     }
-    void Mesh::Draw() const
-    {
-        Bind();
-        glDrawElements(GL_TRIANGLES, mp_Allocation->indicesCount, GL_UNSIGNED_INT, nullptr);
-    }
-    void Mesh::Bind() const { glBindVertexArray(mp_Allocation->VAO); }
-    void Mesh::Unbind() { glBindVertexArray(0); }
-    unsigned int Mesh::GetAllocationCount()
+    size_t Mesh::GetAllocationCount()
     { 
         std::erase_if(s_Cache, [](const auto& item) { return item.second.expired(); });
-        return static_cast<unsigned int>(s_Cache.size());
+        return s_Cache.size();
     }
 }

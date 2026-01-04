@@ -15,6 +15,7 @@ namespace Engine
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_SAMPLES, 4); 
         glfwWindowHint(GLFW_DEPTH_BITS, 24);
+        glfwWindowHint(GLFW_STENCIL_BITS, 8);
         GLFWwindow* mainWindow = glfwCreateWindow(1, 1, "Engine", nullptr, nullptr);
         glfwDefaultWindowHints();
         if (!mainWindow) throw std::runtime_error("Could not create main context.");
@@ -23,6 +24,7 @@ namespace Engine
         return mainWindow;
     }
     GLFWwindow* Window::s_MainWindow = Initialize();
+    GLFWwindow* Window::s_CurrentWindow = nullptr;
     Window::Window() { Create(); }
     Window::Window(std::string title) : m_Title(title) { Create(); }
     Window::Window(std::string title, unsigned int width, unsigned int height) : m_Title(title), m_Width(width), m_Height(height), m_AspectRatio(static_cast<float>(width) / static_cast<float>(height)) { Create(); }
@@ -39,6 +41,7 @@ namespace Engine
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_SAMPLES, 4); 
         glfwWindowHint(GLFW_DEPTH_BITS, 24);
+        glfwWindowHint(GLFW_STENCIL_BITS, 8);
         mp_Window = glfwCreateWindow(m_Width, m_Height, m_Title.c_str(), nullptr, nullptr);
         glfwDefaultWindowHints();
         if (!mp_Window) throw std::runtime_error("Could not create window.");
@@ -104,7 +107,14 @@ namespace Engine
         p_Window->PushMovementToInputs({deltaX, deltaY});
         glfwSetCursorPos(window, p_Window->m_Width / 2, p_Window->m_Height / 2);
     }
-    void Window::MakeCurrent() { wglMakeCurrent(GetDC(glfwGetWin32Window(mp_Window)), glfwGetWGLContext(s_MainWindow)); }
+    void Window::MakeCurrent()
+    {
+        if (mp_Window != s_CurrentWindow)
+        {
+            wglMakeCurrent(GetDC(glfwGetWin32Window(mp_Window)), glfwGetWGLContext(s_MainWindow));
+            s_CurrentWindow = mp_Window;
+        }
+    }
     void Window::SwapBuffers() { glfwSwapBuffers(mp_Window); }
     void Window::ProcessEvents()
     {

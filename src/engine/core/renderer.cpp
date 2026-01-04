@@ -11,8 +11,7 @@ namespace Engine
 {
     Renderer::Renderer()
     {
-        m_Shader = Shader("./assets/shaders/default/vertexShader.glsl", "./assets/shaders/default/fragmentShader.glsl");
-        m_GridShader = Shader("./assets/shaders/grid/vertexShader.glsl", "./assets/shaders/grid/fragmentShader.glsl");
+        m_Shader.SetUniform("ambientStrength", m_AmbientStrength);
 
         float vertices[] = {
                // Positions        // Colors (RGB)
@@ -45,7 +44,7 @@ namespace Engine
     {
         window.MakeCurrent();
         glViewport(0, 0, window.GetWidth(), window.GetHeight());
-        glClearColor((float) 0x79 / 255, (float) 0xA6 / 255, (float) 0xFF / 255, 1.0f);
+        glClearColor(m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, m_ClearColor.a);
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -54,33 +53,31 @@ namespace Engine
         Transform firstCameraTransform;
         Camera firstCamera;
 
-        for (auto [handle, t, c] : world.View<Transform, Camera>())
+        for (auto [handle, transform, camera] : world.View<Transform, Camera>())
         {
             firstCameraHandle = handle;
-            firstCameraTransform = t;
-            firstCamera = c;
+            firstCameraTransform = transform;
+            firstCamera = camera;
             break;
         }
 
-        m_GridShader.Bind();
-        glm::mat4 MVP = firstCamera.GetProjectionMatrix(window.GetAspectRatio()) * firstCameraTransform.GetInverseWorldMatrix();
-        m_GridShader.SetUniform("MVP", &MVP);
+        // m_GridShader.Bind();
+        // glm::mat4 MVP = firstCamera.GetProjectionMatrix(window.GetAspectRatio()) * firstCameraTransform.GetInverseWorldMatrix();
+        // m_GridShader.SetUniform("MVP", &MVP);
 
-        // TODO: Remove me
-        glBindVertexArray(gridVAO);
-        glLineWidth(2.0f);
-        glDrawArrays(GL_LINES, 0, 6);
-        glBindVertexArray(0);
+        // // TODO: Remove me
+        // glBindVertexArray(gridVAO);
+        // glLineWidth(2.0f);
+        // glDrawArrays(GL_LINES, 0, 6);
+        // glBindVertexArray(0);
 
         for (auto [handle, transform, mesh, texture] : world.View<Transform, Mesh, Texture>())
         {
-            m_Shader.Bind();
             glm::mat4 vertexPositionTransformationMatrix = firstCamera.GetProjectionMatrix(window.GetAspectRatio()) * firstCameraTransform.GetInverseWorldMatrix() * transform.GetWorldMatrix();
-            unsigned int textureUnit = 0;
-            texture.Bind(textureUnit);
-            m_Shader.SetUniform("sampler", &textureUnit);
-            m_Shader.SetUniform("vertexPositionTransformationMatrix", &vertexPositionTransformationMatrix);
-            mesh.Draw();
+            texture.Bind(0);
+            m_Shader.SetUniform("sampler", 0);
+            m_Shader.SetUniform("vertexPositionTransformationMatrix", vertexPositionTransformationMatrix);
+            m_Shader.Draw(mesh);
         }
     }
 }

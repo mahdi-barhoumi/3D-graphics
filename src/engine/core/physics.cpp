@@ -6,6 +6,7 @@ namespace Engine
     float Physics::GetInverseMass() const { return m_InverseMass; }
     void Physics::SetMass(float mass)
     {
+        if (m_Stationary) return;
         m_Mass = mass;
         m_InverseMass = 1 / mass;
         m_CachedInertiaTensor = m_Collider->GetInertiaTensor(mass);
@@ -28,10 +29,10 @@ namespace Engine
     void Physics::Integrate(float deltaTime)
     {
         m_Velocity += m_ForceAccumulator * m_InverseMass * deltaTime;
-        m_Velocity *= (1.0f - m_Drag * deltaTime);
+        m_Velocity *= 1.0f - m_Drag * deltaTime;
 
         m_AngularVelocity += m_CachedInverseInertiaTensor * m_TorqueAccumulator * deltaTime;
-        m_AngularVelocity *= (1.0f - m_Drag * deltaTime);
+        m_AngularVelocity *= 1.0f - m_Drag * deltaTime;
     }
     Collider& Physics::GetCollider() const { return *m_Collider; }
     glm::vec3 Physics::GetVelocity() const { return m_Velocity; }
