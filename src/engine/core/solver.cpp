@@ -6,6 +6,10 @@
 
 namespace Engine
 {
+    Solver::Solver(float gravity) : m_Gravity(gravity) {}
+    float Solver::GetGravity() const { return m_Gravity; }
+    void Solver::SetGravity(float gravity) { m_Gravity = gravity; }
+
     Solver::Support Solver::GetSupport(const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB, glm::vec3 direction)
     {
         Support support;
@@ -297,18 +301,31 @@ namespace Engine
         glm::vec3 relativeVelocity = fullVelocityB - fullVelocityA;
         float velocityAlongNormal = glm::dot(relativeVelocity, collision.normal);
         
-        // Don't resolve if objects are separating.
-        if (velocityAlongNormal > 0) return;
-        
-        // Calculate angular effect on impulse.
-        glm::vec3 inertiaA = glm::cross(
-            physicsA.GetInverseInertiaTensor() * glm::cross(relativeA, collision.normal),
-            relativeA
-        );
-        glm::vec3 inertiaB = glm::cross(
-            physicsB.GetInverseInertiaTensor() * glm::cross(relativeB, collision.normal),
-            relativeB
-        );
+        // Calculate angular effect on impulse (only for non-stationary objects).
+        glm::vec3 inertiaA = glm::vec3(0);
+        glm::vec3 inertiaB = glm::vec3(0);
+        if (!physicsA.IsStationary())
+        {
+            glm::mat3 rotationMatrixA = glm::mat3(transformA.GetRotationMatrix());
+            glm::vec3 scaleA = transformA.GetScale();
+            glm::mat3 localInverseTensorA = physicsA.GetInverseInertiaTensor();
+            localInverseTensorA[0][0] *= (scaleA.y * scaleA.y + scaleA.z * scaleA.z) * 0.5f;
+            localInverseTensorA[1][1] *= (scaleA.x * scaleA.x + scaleA.z * scaleA.z) * 0.5f;
+            localInverseTensorA[2][2] *= (scaleA.x * scaleA.x + scaleA.y * scaleA.y) * 0.5f;
+            glm::mat3 inverseInertiaTensorWorldA = rotationMatrixA * localInverseTensorA * glm::transpose(rotationMatrixA);
+            inertiaA = glm::cross(inverseInertiaTensorWorldA * glm::cross(relativeA, collision.normal), relativeA);
+        }
+        if (!physicsB.IsStationary())
+        {
+            glm::mat3 rotationMatrixB = glm::mat3(transformB.GetRotationMatrix());
+            glm::vec3 scaleB = transformB.GetScale();
+            glm::mat3 localInverseTensorB = physicsB.GetInverseInertiaTensor();
+            localInverseTensorB[0][0] *= (scaleB.y * scaleB.y + scaleB.z * scaleB.z) * 0.5f;
+            localInverseTensorB[1][1] *= (scaleB.x * scaleB.x + scaleB.z * scaleB.z) * 0.5f;
+            localInverseTensorB[2][2] *= (scaleB.x * scaleB.x + scaleB.y * scaleB.y) * 0.5f;
+            glm::mat3 inverseInertiaTensorWorldB = rotationMatrixB * localInverseTensorB * glm::transpose(rotationMatrixB);
+            inertiaB = glm::cross(inverseInertiaTensorWorldB * glm::cross(relativeB, collision.normal), relativeB);
+        }
         float angularEffect = glm::dot(inertiaA + inertiaB, collision.normal);
         
         // Calculate impulse magnitude.
@@ -330,16 +347,11 @@ namespace Engine
         float totalInverseMass = physicsA.GetInverseMass() + physicsB.GetInverseMass();
         if (totalInverseMass > 0)
         {
-            if (!physicsA.IsStationary())
-                transformA.TranslateBy(-collision.normal * collision.depth * (physicsA.GetInverseMass() / totalInverseMass));
-            if (!physicsB.IsStationary())
-                transformB.TranslateBy(collision.normal * collision.depth * (physicsB.GetInverseMass() / totalInverseMass));
+            if (!physicsA.IsStationary()) transformA.TranslateBy(-collision.normal * collision.depth * (physicsA.GetInverseMass() / totalInverseMass));
+            if (!physicsB.IsStationary()) transformB.TranslateBy(collision.normal * collision.depth * (physicsB.GetInverseMass() / totalInverseMass));
         }
     }
 
-    Solver::Solver(float gravity) : m_Gravity(gravity) {}
-    float Solver::GetGravity() const { return m_Gravity; }
-    void Solver::SetGravity(float gravity) { m_Gravity = gravity; }
     void Solver::Solve(World& world, float deltaTime)
     {
         deltaTime = std::clamp(deltaTime, 0.0f, 1.0f);
@@ -358,8 +370,8 @@ namespace Engine
             float deltaAngle = glm::length(angularVelocity) * deltaTime;
             if (deltaAngle > 1e-6f)
             {
-                glm::vec3 axis = glm::normalize(angularVelocity);
-                transform.RotateAround(axis, deltaAngle);
+                glm::vec3 rotationAxis = glm::normalize(angularVelocity);
+                transform.RotateAround(rotationAxis, deltaAngle);
             }
             
             physics.ResetAccumulators();

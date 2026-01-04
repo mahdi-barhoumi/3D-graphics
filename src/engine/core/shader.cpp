@@ -1,8 +1,8 @@
-#include <cstring>
-#include <cstdlib>
-#include <sstream>
+#include <ranges>
 #include <fstream>
+#include <sstream>
 #include <stdexcept>
+#include <glm/glm.hpp>
 #include <engine/core/shader.hpp>
 
 namespace Engine
@@ -43,7 +43,7 @@ namespace Engine
             GLchar log[length];
             glGetShaderInfoLog(vertexShader, length, &length, log);
             log[length] = '\0';
-            throw std::runtime_error(std::format("Failed to compile vertex shader: {}", (char*) log));
+            throw std::runtime_error(std::format("Failed to compile vertex shader:\n{}", (char*) log));
         }
         glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &status);
         if (status == GL_FALSE)
@@ -53,7 +53,7 @@ namespace Engine
             GLchar log[length];
             glGetShaderInfoLog(fragmentShader, length, &length, log);
             log[length] = '\0';
-            throw std::runtime_error(std::format("Failed to compile fragment shader: {}", (char*) log));
+            throw std::runtime_error(std::format("Failed to compile fragment shader:\n{}", (char*) log));
         }
         glAttachShader(m_Program, vertexShader);
         glAttachShader(m_Program, fragmentShader);
@@ -61,7 +61,6 @@ namespace Engine
         glValidateProgram(m_Program);
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
-        glUseProgram(m_Program);
         GLint activeUniformsCount = 0;
         glGetProgramiv(m_Program, GL_ACTIVE_UNIFORMS, &activeUniformsCount);
         GLint maxUniformNameLength;
@@ -76,71 +75,14 @@ namespace Engine
             uniform.location = glGetUniformLocation(m_Program, name);
             m_UniformMap[std::string(name)] = uniform;
         }
-        glUseProgram(0);
     }
     Shader::Shader(std::string vertexShaderPath, std::string fragmentShaderPath, std::string geometryShaderPath) { throw std::runtime_error("Not implemented."); }
-    Shader::~Shader() { /*glDeleteProgram(m_Program);*/ } // TODO: Fix me
-    void Shader::Bind() const { glUseProgram(m_Program); }
-    void Shader::Unbind() { glUseProgram(0); }
-    void Shader::SetUniform(const std::string& name, const void*&& value)
+    Shader::~Shader() { glDeleteProgram(m_Program); }
+    std::vector<std::string> Shader::GetUniformNames() const { return std::vector<std::string>(m_UniformMap | std::views::keys | std::ranges::to<std::vector>()); }
+    void Shader::Draw(const Mesh& mesh) const
     {
-        const Uniform& uniform = m_UniformMap.at(name);
-        switch (uniform.type)
-        {
-            case GL_FLOAT:
-                glUniform1fv(uniform.location, 1, (const GLfloat*) value);
-            break;
-            case GL_FLOAT_VEC2:
-                glUniform2fv(uniform.location, 1, (const GLfloat*) value);
-            break;
-            case GL_FLOAT_VEC3:
-                glUniform3fv(uniform.location, 1, (const GLfloat*) value);
-            break;
-            case GL_FLOAT_VEC4:
-                glUniform4fv(uniform.location, 1, (const GLfloat*) value);
-            break;
-            case GL_INT:
-                glUniform1iv(uniform.location, 1, (const GLint*) value);
-            break;
-            case GL_INT_VEC2:
-                glUniform2iv(uniform.location, 1, (const GLint*) value);
-            break;
-            case GL_INT_VEC3:
-                glUniform3iv(uniform.location, 1, (const GLint*) value);
-            break;
-            case GL_INT_VEC4:
-                glUniform4iv(uniform.location, 1, (const GLint*) value);
-            break;
-            case GL_UNSIGNED_INT:
-                glUniform1uiv(uniform.location, 1, (const GLuint*) value);
-            break;
-            case GL_UNSIGNED_INT_VEC2:
-                glUniform2uiv(uniform.location, 1, (const GLuint*) value);
-            break;
-            case GL_UNSIGNED_INT_VEC3:
-                glUniform3uiv(uniform.location, 1, (const GLuint*) value);
-            break;
-            case GL_UNSIGNED_INT_VEC4:
-                glUniform4uiv(uniform.location, 1, (const GLuint*) value);
-            break;
-            case GL_FLOAT_MAT3:
-                glUniformMatrix3fv(uniform.location, 1, GL_FALSE, (const GLfloat*) value);
-            break;
-            case GL_FLOAT_MAT4:
-                glUniformMatrix4fv(uniform.location, 1, GL_FALSE, (const GLfloat*) value);
-            break;
-            case GL_SAMPLER_2D:
-                glUniform1i(uniform.location, *(const GLint*) value);
-            break;
-            default:
-                throw std::runtime_error("Unsupported uniform type.");
-            break;
-        }
-    }
-    std::vector<std::string> Shader::GetUniformNames() const
-    {
-        std::vector<std::string> names;
-        for (const auto& [name, uniform] : m_UniformMap) names.push_back(name);
-        return names;
+        glUseProgram(m_Program);
+        glBindVertexArray(mesh.mp_Allocation->VAO);
+        glDrawElements(GL_TRIANGLES, mesh.mp_Allocation->indicesCount, GL_UNSIGNED_INT, nullptr);
     }
 }
