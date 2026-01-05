@@ -2,7 +2,7 @@
 #include <glew/glew.hpp>
 #include <engine/core/mesh.hpp>
 #include <engine/core/camera.hpp>
-#include <engine/core/window.hpp>
+#include <engine/core/vertex.hpp>
 #include <engine/core/texture.hpp>
 #include <engine/core/renderer.hpp>
 #include <engine/core/transform.hpp>
@@ -11,34 +11,17 @@ namespace Engine
 {
     Renderer::Renderer()
     {
+        std::vector<VertexP3C4> vertices;
+        vertices.push_back({ .position = glm::vec3(0.0f, 0.0f, 0.0f), .color = Color::Red });
+        vertices.push_back({ .position = glm::vec3(5.0f, 0.0f, 0.0f), .color = Color::Red });
+        vertices.push_back({ .position = glm::vec3(0.0f, 0.0f, 0.0f), .color = Color::Green });
+        vertices.push_back({ .position = glm::vec3(0.0f, 5.0f, 0.0f), .color = Color::Green });
+        vertices.push_back({ .position = glm::vec3(0.0f, 0.0f, 0.0f), .color = Color::Blue });
+        vertices.push_back({ .position = glm::vec3(0.0f, 0.0f, 5.0f), .color = Color::Blue });
+        std::vector<unsigned int> indices {0, 1, 2, 3, 4, 5};
+        m_AxisMesh = Mesh(vertices, indices, Mesh::Primitive::Lines);
+
         m_Shader.SetUniform("ambientStrength", m_AmbientStrength);
-
-        float vertices[] = {
-               // Positions        // Colors (RGB)
-            0.0f,  0.0f,  0.0f,   1.0f, 0.0f, 0.0f, // X-axis start (Red)
-            5.0f,  0.0f,  0.0f,   1.0f, 0.0f, 0.0f, // X-axis end
-
-            0.0f,  0.0f,  0.0f,   0.0f, 1.0f, 0.0f, // Y-axis start (Green)
-            0.0f,  5.0f,  0.0f,   0.0f, 1.0f, 0.0f, // Y-axis end
-
-            0.0f,  0.0f,  0.0f,   0.0f, 0.0f, 1.0f, // Z-axis start (Blue)
-            0.0f,  0.0f,  5.0f,   0.0f, 0.0f, 1.0f  // Z-axis end
-        };
-        glGenVertexArrays(1, &gridVAO);
-        glGenBuffers(1, &gridVBO);
-
-        glBindVertexArray(gridVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, gridVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0); 
-        glBindVertexArray(0);
     }
     void Renderer::Render(World& world, Window& window)
     {
@@ -61,19 +44,13 @@ namespace Engine
             break;
         }
 
-        // m_GridShader.Bind();
-        // glm::mat4 MVP = firstCamera.GetProjectionMatrix(window.GetAspectRatio()) * firstCameraTransform.GetInverseWorldMatrix();
-        // m_GridShader.SetUniform("MVP", &MVP);
-
-        // // TODO: Remove me
-        // glBindVertexArray(gridVAO);
-        // glLineWidth(2.0f);
-        // glDrawArrays(GL_LINES, 0, 6);
-        // glBindVertexArray(0);
+        glm::mat4 vertexPositionTransformationMatrix =  firstCamera.GetProjectionMatrix(window.GetAspectRatio()) * firstCameraTransform.GetInverseWorldMatrix();
+        m_AxisShader.SetUniform("vertexPositionTransformationMatrix", vertexPositionTransformationMatrix);
+        m_AxisShader.Draw(m_AxisMesh);
 
         for (auto [handle, transform, mesh, texture] : world.View<Transform, Mesh, Texture>())
         {
-            glm::mat4 vertexPositionTransformationMatrix = firstCamera.GetProjectionMatrix(window.GetAspectRatio()) * firstCameraTransform.GetInverseWorldMatrix() * transform.GetWorldMatrix();
+            vertexPositionTransformationMatrix = firstCamera.GetProjectionMatrix(window.GetAspectRatio()) * firstCameraTransform.GetInverseWorldMatrix() * transform.GetWorldMatrix();
             texture.Bind(0);
             m_Shader.SetUniform("sampler", 0);
             m_Shader.SetUniform("vertexPositionTransformationMatrix", vertexPositionTransformationMatrix);

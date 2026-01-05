@@ -3,12 +3,15 @@
 #include <memory>
 #include <unordered_map>
 #include <glew/glew.hpp>
+#include <engine/core/color.hpp>
 #include <engine/core/component.hpp>
 
 namespace Engine
 {
     class Texture : public Component
     {
+        friend class Framebuffer;
+
         public:
 
         enum class Format
@@ -46,6 +49,7 @@ namespace Engine
         void SetWrap(Wrap wrap);
         void SetMinification(Minification minification);
         void SetMagnification(Magnification magnification);
+        void SetBorderColor(const Color& color);
         unsigned int GetWidth() const;
         unsigned int GetHeight() const;
         static unsigned int GetMaxTextureUnits();
@@ -55,7 +59,8 @@ namespace Engine
 
         struct Allocation final
         {
-            GLuint texture = 0;
+            GLuint texture;
+            GLenum format;
 
             Allocation(const std::string& path);
             Allocation(unsigned int width, unsigned int height, Format format);

@@ -14,7 +14,6 @@
 #include <engine/core/solver.hpp>
 #include <engine/core/physics.hpp>
 #include <engine/core/collider.hpp>
-#include <engine/utils/utils.hpp>
 
 using namespace std;
 using namespace glm;
@@ -23,7 +22,7 @@ using namespace Engine;
 int main(void)
 {
     World world;
-    Window window = Window("3D", 1280, 720);
+    Window window = Window("3D", 1600, 900);
     Solver solver = Solver();
     Renderer renderer = Renderer();
 
@@ -44,7 +43,7 @@ int main(void)
         surface.Add<Transform>(surfaceTransform);
         surface.Add<Mesh>(Mesh("./assets/meshes/surface.obj"));
         surface.Add<Texture>(Texture("./assets/textures/stone.png"));
-        surface.Add<Physics>(Physics(PlaneCollider(100), true));
+        surface.Add<Physics>(Physics(PlaneCollider(1000), true));
     }
 
     {
@@ -103,12 +102,6 @@ int main(void)
                     case Key::LeftArrow:
                         physics.ApplyForce(physics.GetMass() * 10 * glm::vec3(-1, 0, 0));
                     break;
-                    case Key::LeftShift:
-                        physics.ApplyForce(physics.GetMass() * 10 * glm::vec3(0, 0, 1));
-                    break;
-                    case Key::LeftControl:
-                        physics.ApplyForce(physics.GetMass() * 10 * glm::vec3(0, 0, -1));
-                    break;
                 }
             }
         }
@@ -147,6 +140,12 @@ int main(void)
                     break;
                     case Key::A:
                         camera.Roll(-0.5);
+                    break;
+                    case Key::LeftShift:
+                        transform.TranslateBy(0, 0, 0.1);
+                    break;
+                    case Key::LeftControl:
+                        transform.TranslateBy(0, 0, -0.1);
                     break;
                 }
             }

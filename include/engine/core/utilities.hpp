@@ -1,0 +1,9 @@
+#pragma once
+#include <vector>
+#include <string>
+#include <engine/core/vertex.hpp>
+
+namespace Engine::Utilities
+{
+    bool LoadOBJFile(std::string path, std::vector<VertexP3T2N3>& vertices, std::vector<unsigned int>& faces);
+}

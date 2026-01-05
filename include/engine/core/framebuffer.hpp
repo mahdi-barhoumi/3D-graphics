@@ -1,4 +1,5 @@
 #include <glew/glew.hpp>
+#include <engine/core/texture.hpp>
 
 namespace Engine
 {
@@ -6,15 +7,14 @@ namespace Engine
     {
         private:
 
-        GLuint m_Framebuffer;
+        GLuint m_FBO;
 
         public:
 
         Framebuffer();
         ~Framebuffer();
 
-        void Bind();
-        static void Unbind();
+        void AttachTexture(const Texture& texture);
 
     };
 }

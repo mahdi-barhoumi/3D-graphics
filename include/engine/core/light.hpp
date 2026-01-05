@@ -4,11 +4,20 @@
 
 namespace Engine
 {
-    struct Light : public Component
+    class Light : public Component
     {
-        glm::vec4 color;
+        private:
+
+        glm::vec3 m_Direction = glm::vec3(0.0f, 0.0f, -1.0f);
+
+        public:
+
         Light() = default;
-        Light(const Light&) = default;
+        Light(const Light& other) = default;
         ~Light() = default;
+
+        glm::vec3 GetDirection() const;
+        glm::mat4 GetProjectionMatrix() const;
+
     };
 }

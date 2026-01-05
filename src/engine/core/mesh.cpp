@@ -1,66 +1,74 @@
-#include <stdexcept>
 #include <engine/core/mesh.hpp>
-#include <engine/utils/utils.hpp>
+#include <engine/core/utilities.hpp>
 
 namespace Engine
 {
     std::unordered_map<std::string, std::weak_ptr<Mesh::Allocation>> Mesh::s_Cache;
-    Mesh::Allocation::Allocation(const std::string& path)
+    Mesh::Allocation::Allocation(const std::vector<VertexP3C4>& vertices, const std::vector<unsigned int>& indices, Primitive primitive)
     {
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-        glGenBuffers(1, &IBO);
+        glCreateVertexArrays(1, &VAO);
+        glCreateBuffers(1, &VBO);
+        glCreateBuffers(1, &IBO);
 
         if (!VAO || !VBO || !IBO) throw std::runtime_error("Could not generate buffers for mesh.");
 
-        std::vector<Vertex> vertices;
-        std::vector<glm::uvec3> indices;
-        Utils::ParseOBJFile(path, vertices, indices);
+        switch (primitive)
+        {
+            case Primitive::Points: this->primitive = GL_POINTS; break;
+            case Primitive::Lines: this->primitive = GL_LINES; break;
+            case Primitive::Triangles: this->primitive = GL_TRIANGLES; break;
+        }
+        indicesCount = static_cast<GLsizei>(indices.size());
 
-        if (!vertices.size() || !indices.size()) throw std::runtime_error("Could not load mesh file.");
+        glNamedBufferData(IBO, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+        glNamedBufferData(VBO, vertices.size() * sizeof(VertexP3C4), vertices.data(), GL_STATIC_DRAW);
 
-        indicesCount = static_cast<GLsizei>(3 * indices.size());
+        constexpr GLuint bindingIndex = 0;
+        glVertexArrayElementBuffer(VAO, IBO);
+        glVertexArrayVertexBuffer(VAO, bindingIndex, VBO, 0, sizeof(VertexP3C4));
+        
+        glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, offsetof(VertexP3C4, position));
+        glVertexArrayAttribBinding(VAO, 0, bindingIndex);
+        glEnableVertexArrayAttrib(VAO, 0);
 
-        glBindVertexArray(VAO);
+        glVertexArrayAttribFormat(VAO, 1, 4, GL_FLOAT, GL_FALSE, offsetof(VertexP3C4, color));
+        glVertexArrayAttribBinding(VAO, 1, bindingIndex);
+        glEnableVertexArrayAttrib(VAO, 1);
+    }
+    Mesh::Allocation::Allocation(const std::vector<VertexP3T2N3>& vertices, const std::vector<unsigned int>& indices, Primitive primitive)
+    {
+        glCreateVertexArrays(1, &VAO);
+        glCreateBuffers(1, &VBO);
+        glCreateBuffers(1, &IBO);
 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(
-            GL_ARRAY_BUFFER,
-            vertices.size() * sizeof(Vertex),
-            vertices.data(),
-            GL_STATIC_DRAW
-        );
+        if (!VAO || !VBO || !IBO) throw std::runtime_error("Could not generate buffers for mesh.");
 
-        glVertexAttribPointer(
-            0, 3, GL_FLOAT, GL_FALSE,
-            sizeof(Vertex),
-            (void*) offsetof(Vertex, position)
-        );
-        glEnableVertexAttribArray(0);
+        switch (primitive)
+        {
+            case Primitive::Points: this->primitive = GL_POINTS; break;
+            case Primitive::Lines: this->primitive = GL_LINES; break;
+            case Primitive::Triangles: this->primitive = GL_TRIANGLES; break;
+        }
+        indicesCount = static_cast<GLsizei>(indices.size());
 
-        glVertexAttribPointer(
-            1, 2, GL_FLOAT, GL_FALSE,
-            sizeof(Vertex),
-            (void*) offsetof(Vertex, textureCoordinate)
-        );
-        glEnableVertexAttribArray(1);
+        glNamedBufferData(IBO, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+        glNamedBufferData(VBO, vertices.size() * sizeof(VertexP3T2N3), vertices.data(), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(
-            2, 3, GL_FLOAT, GL_FALSE,
-            sizeof(Vertex),
-            (void*) offsetof(Vertex, normal)
-        );
-        glEnableVertexAttribArray(2);
+        constexpr GLuint bindingIndex = 0;
+        glVertexArrayElementBuffer(VAO, IBO);
+        glVertexArrayVertexBuffer(VAO, bindingIndex, VBO, 0, sizeof(VertexP3T2N3));
+        
+        glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, offsetof(VertexP3T2N3, position));
+        glVertexArrayAttribBinding(VAO, 0, bindingIndex);
+        glEnableVertexArrayAttrib(VAO, 0);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-        glBufferData(
-            GL_ELEMENT_ARRAY_BUFFER,
-            indices.size() * sizeof(glm::uvec3),
-            indices.data(),
-            GL_STATIC_DRAW
-        );
+        glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, GL_FALSE, offsetof(VertexP3T2N3, textureCoordinate));
+        glVertexArrayAttribBinding(VAO, 1, bindingIndex);
+        glEnableVertexArrayAttrib(VAO, 1);
 
-        glBindVertexArray(0);
+        glVertexArrayAttribFormat(VAO, 2, 3, GL_FLOAT, GL_FALSE, offsetof(VertexP3T2N3, normal));
+        glVertexArrayAttribBinding(VAO, 2, bindingIndex);
+        glEnableVertexArrayAttrib(VAO, 2);
     }
     Mesh::Allocation::~Allocation()
     {
@@ -72,12 +80,28 @@ namespace Engine
     {
         auto iterator = s_Cache.find(path);
         if (iterator != s_Cache.end() && (mp_Allocation = iterator->second.lock())) return;
-        mp_Allocation = std::make_shared<Allocation>(path);
+        std::vector<unsigned int> indices;
+        std::vector<VertexP3T2N3> vertices;
+        if (!Utilities::LoadOBJFile(path, vertices, indices)) throw std::runtime_error("Could not load mesh file.");
+        mp_Allocation = std::make_shared<Allocation>(vertices, indices, Primitive::Triangles);
         s_Cache[path] = mp_Allocation;
+    }
+    Mesh::Mesh(const std::vector<VertexP3C4>& vertices, const std::vector<unsigned int>& indices, Primitive primitive)
+    {
+        mp_Allocation = std::make_shared<Allocation>(vertices, indices, primitive);
+    }
+    Mesh::Mesh(const std::vector<VertexP3T2N3>& vertices, const std::vector<unsigned int>& indices, Primitive primitive)
+    {
+        mp_Allocation = std::make_shared<Allocation>(vertices, indices, primitive);
     }
     size_t Mesh::GetAllocationCount()
     { 
         std::erase_if(s_Cache, [](const auto& item) { return item.second.expired(); });
         return s_Cache.size();
+    }
+    void Mesh::Draw() const
+    {
+        glBindVertexArray(mp_Allocation->VAO);
+        glDrawElements(mp_Allocation->primitive, mp_Allocation->indicesCount, GL_UNSIGNED_INT, nullptr);
     }
 }

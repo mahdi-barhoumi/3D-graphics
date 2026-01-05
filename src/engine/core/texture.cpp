@@ -1,4 +1,3 @@
-#include <stdexcept>
 #include <stb/image.hpp>
 #include <engine/core/texture.hpp>
 
@@ -19,6 +18,7 @@ namespace Engine
         if (!data) throw std::runtime_error("Could not load texture file.");
         glCreateTextures(GL_TEXTURE_2D, 1, &texture);
         if (!texture) throw std::runtime_error("Could not create texture.");
+        format = GL_RGBA8;
         glTextureStorage2D(texture, 1, GL_RGBA8, width, height);
         glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
         glTextureParameteri(texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -35,15 +35,19 @@ namespace Engine
         {
             case Format::RGB:
                 glTextureStorage2D(texture, 1, GL_RGB8, width, height);
+                this->format = GL_RGB8;
             break;
             case Format::RGBA:
                 glTextureStorage2D(texture, 1, GL_RGBA8, width, height);
+                this->format = GL_RGBA8;
             break;
             case Format::Depth:
                 glTextureStorage2D(texture, 1, GL_DEPTH_COMPONENT24, width, height);
+                this->format = GL_DEPTH_COMPONENT24;
             break;
             case Format::DepthStencil:
                 glTextureStorage2D(texture, 1, GL_DEPTH24_STENCIL8, width, height);
+                this->format = GL_DEPTH24_STENCIL8;
             break;
         }
         glTextureParameteri(texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -113,6 +117,11 @@ namespace Engine
                 glTextureParameteri(mp_Allocation->texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             return;
         }
+    }
+    void Texture::SetBorderColor(const Color& color)
+    {
+        const GLfloat value[4] = { color.r, color.g, color.b, color.a };
+        glTextureParameterfv(mp_Allocation->texture, GL_TEXTURE_BORDER_COLOR, value);
     }
     void Texture::Bind(unsigned int unit) const
     {

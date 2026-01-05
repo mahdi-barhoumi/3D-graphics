@@ -176,13 +176,6 @@ Linker flags in the Makefile: `-lglew -lglfw -lopengl32 -lgdi32 -luser32 -lkerne
 
 ---
 
-## Contributing & License ✍️
-
-- Contributions are welcome — open issues or submit PRs for bug fixes, features, or documentation improvements.
-- There is **no explicit top-level license** file in this repository. Consider adding an appropriate LICENSE if you intend to release or share the project.
-
----
-
 ## Notes & Next Steps 🔭
 
 - The code is geared toward learning and small experiments; the renderer and physics solver are intentionally compact and not optimized for production.

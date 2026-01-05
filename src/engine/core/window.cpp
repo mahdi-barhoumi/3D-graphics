@@ -1,4 +1,3 @@
-#include <stdexcept>
 #include <glew/glew.hpp>
 #include <engine/core/window.hpp>
 
