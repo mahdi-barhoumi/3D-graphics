@@ -82,7 +82,7 @@ int main(void)
             Handle sphereHandle = world.Create();
             Object sphere = world.Get(sphereHandle);
             Transform sphereTransform;
-            sphereTransform.TranslateTo(2 * i - 10,  2 * j - 10, 20.0f);
+            sphereTransform.TranslateTo(2 * i - 10,  2 * j - 10, 25.0f);
             sphere.Add<Transform>(sphereTransform);
             sphere.Add<Mesh>(Mesh("./assets/meshes/sphere.obj"));
             sphere.Add<Texture>(Texture("./assets/textures/wood.png"));

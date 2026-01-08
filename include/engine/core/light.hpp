@@ -23,6 +23,7 @@ namespace Engine
 
         glm::mat4 GetProjectionMatrix() const;
         glm::vec3 GetDirection(const Transform& transform) const;
+        glm::vec3 GetColor() const;
 
     };
 }
