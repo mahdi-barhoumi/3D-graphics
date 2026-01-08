@@ -69,18 +69,21 @@ namespace Engine
         m_AxisShader.SetUniform("vertexPositionTransformationMatrix", vertexPositionTransformationMatrix);
         m_AxisShader.Draw(m_AxisMesh);
 
-        m_Shader.SetUniform("view", firstCameraTransform.GetInverseWorldMatrix());
-        m_Shader.SetUniform("projection", firstCamera.GetProjectionMatrix(window.GetAspectRatio()));
-        m_Shader.SetUniform("lightSpaceMatrix", m_Light.GetProjectionMatrix() * m_LightTransform.GetInverseWorldMatrix());
-        m_Shader.SetUniform("lightPos", m_LightTransform.GetPosition());
-        //m_Shader.SetUniform("viewPos", firstCameraTransform.GetPosition());
+        m_Shader.SetUniform("cameraPosition", firstCameraTransform.GetPosition());
+        m_Shader.SetUniform("cameraView", firstCameraTransform.GetInverseWorldMatrix());
+        m_Shader.SetUniform("cameraProjection", firstCamera.GetProjectionMatrix(window.GetAspectRatio()));
+        m_Shader.SetUniform("lightPosition", m_LightTransform.GetPosition());
+        m_Shader.SetUniform("lightColor", m_Light.GetColor());
+        m_Shader.SetUniform("lightView", m_LightTransform.GetInverseWorldMatrix());
+        m_Shader.SetUniform("lightProjection", m_Light.GetProjectionMatrix());
+        m_Shader.SetUniform("ambientStrength", m_AmbientStrength);
         m_Shader.SetUniform("diffuseTexture", 0);
         m_Shader.SetUniform("shadowMap", 1);
         m_ShadowMap.Bind(1);
         for (auto [handle, transform, mesh, texture] : world.View<Transform, Mesh, Texture>())
         {
             texture.Bind(0);
-            m_Shader.SetUniform("model", transform.GetWorldMatrix());
+            m_Shader.SetUniform("world", transform.GetWorldMatrix());
             m_Shader.Draw(mesh);
         }
     }

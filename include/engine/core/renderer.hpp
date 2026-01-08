@@ -23,6 +23,8 @@ namespace Engine
         Texture m_ShadowMap = Texture(4096, 4096, Texture::Format::Depth);
         Framebuffer m_ShadowFramebuffer = Framebuffer(m_ShadowMap);
 
+        float m_AmbientStrength = 0.5f;
+
         Mesh m_AxisMesh;
 
         Light m_Light = Light();
