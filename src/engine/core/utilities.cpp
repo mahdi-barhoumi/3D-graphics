@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <unordered_map>
 #include <glm/glm.hpp>
+#include <stb/image.hpp>
 #include <engine/core/utilities.hpp>
 
 namespace Engine::Utilities
@@ -92,6 +93,35 @@ namespace Engine::Utilities
         }
 
         file.close();
+        return true;
+    }
+    bool LoadImageFile(std::string path, unsigned int& width, unsigned int& height, std::vector<Color>& colors)
+    {
+        int imageWidth, imageHeight;
+        unsigned char* data = stbi_load(path.c_str(), &imageWidth, &imageHeight, nullptr, STBI_rgb_alpha);
+
+        if (!data) return false;
+
+        colors.clear();
+        colors.resize(imageWidth * imageHeight);
+
+        width = static_cast<unsigned int>(imageWidth);
+        height = static_cast<unsigned int>(imageHeight);
+
+        size_t stride;
+        size_t count = width * height;
+        for (size_t index = 0; index < count; ++index)
+        {
+            stride = 4 * index;
+            colors[index] = Color(
+                data[stride    ],
+                data[stride + 1],
+                data[stride + 2],
+                data[stride + 3]
+            );
+        }
+
+        stbi_image_free(data);
         return true;
     }
 }

@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <engine/core/mesh.hpp>
 #include <engine/core/utilities.hpp>
 
@@ -18,7 +19,7 @@ namespace Engine
             case Primitive::Lines: this->primitive = GL_LINES; break;
             case Primitive::Triangles: this->primitive = GL_TRIANGLES; break;
         }
-        indicesCount = static_cast<GLsizei>(indices.size());
+        indexCount = static_cast<GLsizei>(indices.size());
 
         glNamedBufferData(IBO, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
         glNamedBufferData(VBO, vertices.size() * sizeof(VertexP3C4), vertices.data(), GL_STATIC_DRAW);
@@ -49,7 +50,7 @@ namespace Engine
             case Primitive::Lines: this->primitive = GL_LINES; break;
             case Primitive::Triangles: this->primitive = GL_TRIANGLES; break;
         }
-        indicesCount = static_cast<GLsizei>(indices.size());
+        indexCount = static_cast<GLsizei>(indices.size());
 
         glNamedBufferData(IBO, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
         glNamedBufferData(VBO, vertices.size() * sizeof(VertexP3T2N3), vertices.data(), GL_STATIC_DRAW);
@@ -80,6 +81,7 @@ namespace Engine
     {
         auto iterator = s_Cache.find(path);
         if (iterator != s_Cache.end() && (mp_Allocation = iterator->second.lock())) return;
+        
         std::vector<unsigned int> indices;
         std::vector<VertexP3T2N3> vertices;
         if (!Utilities::LoadOBJFile(path, vertices, indices)) throw std::runtime_error("Could not load mesh file.");
@@ -101,7 +103,7 @@ namespace Engine
     }
     void Mesh::Draw() const
     {
-        glBindVertexArray(mp_Allocation->VAO);
-        glDrawElements(mp_Allocation->primitive, mp_Allocation->indicesCount, GL_UNSIGNED_INT, nullptr);
+        glBindVertexArray(GetBackendVAO());
+        glDrawElements(GetBackendPrimitive(), GetBackendIndexCount(), GL_UNSIGNED_INT, nullptr);
     }
 }

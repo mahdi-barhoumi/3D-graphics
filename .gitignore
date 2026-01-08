@@ -1,3 +1,4 @@
-**/*.o
 .vscode
+build
 Application.exe
+ApplicationDebug.exe

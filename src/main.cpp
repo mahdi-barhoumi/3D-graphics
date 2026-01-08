@@ -22,7 +22,7 @@ using namespace Engine;
 int main(void)
 {
     World world;
-    Window window = Window("3D", 1600, 900);
+    Window window = Window(1600, 900);
     Solver solver = Solver();
     Renderer renderer = Renderer();
 
@@ -57,7 +57,7 @@ int main(void)
         cube.Add<Transform>(cubeTransform);
         cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
         cube.Add<Texture>(Texture("./assets/textures/dirt.png"));
-        cube.Add<Physics>(Physics(CubeCollider(2)));
+        cube.Add<Physics>(Physics(CubeCollider(2), 4.0f));
     }
 
     for (int i = 0; i < 5; ++i)
@@ -72,6 +72,21 @@ int main(void)
             cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
             cube.Add<Texture>(Texture("./assets/textures/wood.png"));
             cube.Add<Physics>(Physics(CubeCollider(2)));
+        }
+    }
+
+    for (int i = 0; i < 5; ++i)
+    {
+        for (int j = 0; j < 5; ++j)
+        {
+            Handle sphereHandle = world.Create();
+            Object sphere = world.Get(sphereHandle);
+            Transform sphereTransform;
+            sphereTransform.TranslateTo(2 * i - 10,  2 * j - 10, 20.0f);
+            sphere.Add<Transform>(sphereTransform);
+            sphere.Add<Mesh>(Mesh("./assets/meshes/sphere.obj"));
+            sphere.Add<Texture>(Texture("./assets/textures/wood.png"));
+            sphere.Add<Physics>(Physics(SphereCollider(1)));
         }
     }
 
@@ -91,16 +106,16 @@ int main(void)
                 switch (key = input.PopFirstKey())
                 {
                     case Key::UpArrow:
-                        physics.ApplyForce(physics.GetMass() * 10 * glm::vec3(0, 1, 0));
+                        physics.ApplyForce(physics.GetMass() * 50 * glm::vec3(0, 1, 0));
                     break;
                     case Key::DownArrow:
-                        physics.ApplyForce(physics.GetMass() * 10 * glm::vec3(0, -1, 0));
+                        physics.ApplyForce(physics.GetMass() * 50 * glm::vec3(0, -1, 0));
                     break;
                     case Key::RightArrow:
-                        physics.ApplyForce(physics.GetMass() * 10 * glm::vec3(1, 0, 0));
+                        physics.ApplyForce(physics.GetMass() * 50 * glm::vec3(1, 0, 0));
                     break;
                     case Key::LeftArrow:
-                        physics.ApplyForce(physics.GetMass() * 10 * glm::vec3(-1, 0, 0));
+                        physics.ApplyForce(physics.GetMass() * 50 * glm::vec3(-1, 0, 0));
                     break;
                 }
             }
@@ -162,7 +177,7 @@ int main(void)
         deltaTime = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
         start = std::chrono::high_resolution_clock::now();
         deltaTime *= 1e-9;
-        window.SetTitle(format("3D, FPS: {:.2f}", 1 / deltaTime));
+        window.SetTitle(format("FPS: {:.2f}", 1 / deltaTime));
         solver.Solve(world, deltaTime);
         renderer.Render(world, window);
         window.SwapBuffers();

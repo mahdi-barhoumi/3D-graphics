@@ -14,6 +14,8 @@ namespace Engine
     }
     float Physics::GetDrag() const { return m_Drag; }
     void Physics::SetDrag(float drag) { m_Drag = drag; }
+    float Physics::GetFriction() const { return m_Friction; }
+    void Physics::SetFriction(float friction) { m_Friction = friction; }
     float Physics::GetRestitution() const { return m_Restitution; }
     void Physics::SetRestitution(float restitution) { m_Restitution = restitution; }
     void Physics::ApplyForce(const glm::vec3& force) { m_ForceAccumulator += force; }

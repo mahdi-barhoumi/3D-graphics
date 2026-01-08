@@ -42,7 +42,7 @@ namespace Engine
             GLuint VBO;
             GLuint IBO ;
             GLenum primitive;
-            GLsizei indicesCount;
+            GLsizei indexCount;
 
             Allocation(const std::vector<VertexP3C4>& vertices, const std::vector<unsigned int>& indices, Primitive primitive);
             Allocation(const std::vector<VertexP3T2N3>& vertices, const std::vector<unsigned int>& indices, Primitive primitive);
@@ -51,9 +51,14 @@ namespace Engine
 
         static std::unordered_map<std::string, std::weak_ptr<Allocation>> s_Cache;
 
-        std::shared_ptr<Allocation> mp_Allocation;
+        std::shared_ptr<Allocation> mp_Allocation = nullptr;
 
         void Draw() const;
+        inline GLuint GetBackendVAO() const { return mp_Allocation->VAO; }
+        inline GLuint GetBackendVBO() const { return mp_Allocation->VBO; }
+        inline GLuint GetBackendIBO() const { return mp_Allocation->IBO; }
+        inline GLenum GetBackendPrimitive() const { return mp_Allocation->primitive; }
+        inline GLsizei GetBackendIndexCount() const { return mp_Allocation->indexCount; }
         
     };
 }
