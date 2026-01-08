@@ -36,6 +36,7 @@ namespace Engine
 
         Window();
         Window(std::string title);
+        Window(unsigned int width, unsigned int height);
         Window(std::string title, unsigned int width, unsigned int height);
         ~Window();
 

@@ -1,14 +1,28 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <engine/core/color.hpp>
+#include <engine/core/transform.hpp>
 #include <engine/core/component.hpp>
 
 namespace Engine
 {
-    struct Light : public Component
+    class Light : public Component
     {
-        glm::vec4 color;
+        private:
+
+        Color m_Color = Color("#FFFFFFFF");
+        float m_Length = 50.0f;
+        float m_NearPlane = 0.1f;
+        float m_FarPlane = 100.0f;
+
+        public:
+
         Light() = default;
-        Light(const Light&) = default;
+        Light(const Light& other) = default;
         ~Light() = default;
+
+        glm::mat4 GetProjectionMatrix() const;
+        glm::vec3 GetDirection(const Transform& transform) const;
+
     };
 }

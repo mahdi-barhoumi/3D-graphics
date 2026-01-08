@@ -1,6 +1,7 @@
-#include <stdexcept>
+#include <windows.h>
 #include <glew/glew.hpp>
 #include <engine/core/window.hpp>
+#include <engine/core/framebuffer.hpp>
 
 namespace Engine
 {
@@ -27,6 +28,7 @@ namespace Engine
     GLFWwindow* Window::s_CurrentWindow = nullptr;
     Window::Window() { Create(); }
     Window::Window(std::string title) : m_Title(title) { Create(); }
+    Window::Window(unsigned int width, unsigned int height) : m_Width(width), m_Height(height), m_AspectRatio(static_cast<float>(width) / static_cast<float>(height)) { Create(); }
     Window::Window(std::string title, unsigned int width, unsigned int height) : m_Title(title), m_Width(width), m_Height(height), m_AspectRatio(static_cast<float>(width) / static_cast<float>(height)) { Create(); }
     Window::~Window()
     {
@@ -48,8 +50,14 @@ namespace Engine
         // glfwMakeContextCurrent(mp_Window);
         // glfwSwapInterval(0);
         // glfwMakeContextCurrent(s_MainWindow);
-        HGLRC context = glfwGetWGLContext(mp_Window);
-        wglDeleteContext(context);
+        HWND hwnd = glfwGetWin32Window(mp_Window);
+        HICON hAppIcon = (HICON)LoadImage(GetModuleHandle(NULL), "MAINICON", IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+
+        if (hAppIcon) {
+            SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hAppIcon);
+            SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hAppIcon);
+        }
+        wglDeleteContext(glfwGetWGLContext(mp_Window));
         glfwSetWindowUserPointer(mp_Window, this);
         glfwSetCursorPos(mp_Window, m_Width / 2, m_Height / 2);
         glfwSetInputMode(mp_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -109,6 +117,8 @@ namespace Engine
     }
     void Window::MakeCurrent()
     {
+        Framebuffer::Default.SetWidth(m_Width);
+        Framebuffer::Default.SetHeight(m_Height);
         if (mp_Window != s_CurrentWindow)
         {
             wglMakeCurrent(GetDC(glfwGetWin32Window(mp_Window)), glfwGetWGLContext(s_MainWindow));

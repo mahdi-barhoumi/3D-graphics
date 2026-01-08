@@ -82,7 +82,6 @@ namespace Engine
     void Shader::Draw(const Mesh& mesh) const
     {
         glUseProgram(m_Program);
-        glBindVertexArray(mesh.mp_Allocation->VAO);
-        glDrawElements(GL_TRIANGLES, mesh.mp_Allocation->indicesCount, GL_UNSIGNED_INT, nullptr);
+        mesh.Draw();
     }
 }

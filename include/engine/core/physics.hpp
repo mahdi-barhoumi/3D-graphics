@@ -11,8 +11,9 @@ namespace Engine
         private:
 
         float m_Mass = 1.0f;
-        float m_Drag = 0.6f;
-        float m_Restitution = 0.9f;
+        float m_Drag = 0.4f;
+        float m_Friction = 0.1f;
+        float m_Restitution = 0.75f;
         float m_InverseMass = 1.0f;
         bool m_Stationary = false;
         glm::vec3 m_Velocity = glm::vec3(0);
@@ -55,6 +56,8 @@ namespace Engine
         void SetMass(float mass);
         float GetDrag() const;
         void SetDrag(float drag);
+        float GetFriction() const;
+        void SetFriction(float friction);
         float GetRestitution() const;
         void SetRestitution(float restitution);
         void ApplyForce(const glm::vec3& force);

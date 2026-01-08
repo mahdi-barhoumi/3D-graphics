@@ -7,7 +7,7 @@ namespace Engine
 {
     struct Color
     {
-        float r = 0.0f, g = 0.0f, b = 0.0f, a = 1.0f;
+        unsigned char r = 0, g = 0, b = 0, a = 255;
 
         constexpr Color() = default;
         constexpr Color(std::string_view hex)
@@ -31,24 +31,28 @@ namespace Engine
             
             if (hex.size() == 6)
             {
-                r = ((value >> 16) & 0xFF) / 255.0f;
-                g = ((value >> 8) & 0xFF) / 255.0f;
-                b = (value & 0xFF) / 255.0f;
-                a = 1.0f;
+                r = (value >> 16) & 0xFF;
+                g = (value >> 8) & 0xFF;
+                b = value & 0xFF;
+                a = 255;
             } 
             else if (hex.size() == 8)
             {
-                r = ((value >> 24) & 0xFF) / 255.0f;
-                g = ((value >> 16) & 0xFF) / 255.0f;
-                b = ((value >> 8) & 0xFF) / 255.0f;
-                a = (value & 0xFF) / 255.0f;
+                r = (value >> 24) & 0xFF;
+                g = (value >> 16) & 0xFF;
+                b = (value >> 8) & 0xFF;
+                a = value & 0xFF;
             }
         }
-        constexpr Color(float r, float g, float b, float a = 1.0f) : r(std::clamp(r, 0.0f, 1.0f)), g(std::clamp(g, 0.0f, 1.0f)), b(std::clamp(b, 0.0f, 1.0f)), a(std::clamp(a, 0.0f, 1.0f)) {}
-        constexpr Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255) : r(r / 255.0f), g(g / 255.0f), b(b / 255.0f), a(a / 255.0f) {}
+        constexpr Color(float r, float g, float b, float a = 1.0f) 
+            : r(static_cast<unsigned char>(std::clamp(r, 0.0f, 1.0f) * 255.0f))
+            , g(static_cast<unsigned char>(std::clamp(g, 0.0f, 1.0f) * 255.0f))
+            , b(static_cast<unsigned char>(std::clamp(b, 0.0f, 1.0f) * 255.0f))
+            , a(static_cast<unsigned char>(std::clamp(a, 0.0f, 1.0f) * 255.0f)) {}
+        constexpr Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255) : r(r), g(g), b(b), a(a) {}
         
-        operator glm::vec3() const { return glm::vec3(r, g, b); }
-        operator glm::vec4() const { return glm::vec4(r, g, b, a); }
+        operator glm::vec3() const { return glm::vec3(r / 255.0f, g / 255.0f, b / 255.0f); }
+        operator glm::vec4() const { return glm::vec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f); }
 
         static const Color Red;
         static const Color Green;
@@ -58,10 +62,10 @@ namespace Engine
         static const Color Transparent;
     };
 
-    inline const Color Color::Red{1.0f, 0.0f, 0.0f, 1.0f};
-    inline const Color Color::Green{0.0f, 1.0f, 0.0f, 1.0f};
-    inline const Color Color::Blue{0.0f, 0.0f, 1.0f, 1.0f};
-    inline const Color Color::Black{0.0f, 0.0f, 0.0f, 1.0f};
-    inline const Color Color::White{1.0f, 1.0f, 1.0f, 1.0f};
-    inline const Color Color::Transparent{0.0f, 0.0f, 0.0f, 0.0f};
+    inline const Color Color::Red           {1.0f, 0.0f, 0.0f, 1.0f};
+    inline const Color Color::Green         {0.0f, 1.0f, 0.0f, 1.0f};
+    inline const Color Color::Blue          {0.0f, 0.0f, 1.0f, 1.0f};
+    inline const Color Color::Black         {0.0f, 0.0f, 0.0f, 1.0f};
+    inline const Color Color::White         {1.0f, 1.0f, 1.0f, 1.0f};
+    inline const Color Color::Transparent   {0.0f, 0.0f, 0.0f, 0.0f};
 }

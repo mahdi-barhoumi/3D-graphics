@@ -304,6 +304,10 @@ namespace Engine
         // Calculate angular effect on impulse (only for non-stationary objects).
         glm::vec3 inertiaA = glm::vec3(0);
         glm::vec3 inertiaB = glm::vec3(0);
+        glm::mat3 inverseInertiaTensorWorldA = glm::mat3(0);
+        glm::mat3 inverseInertiaTensorWorldB = glm::mat3(0);
+        
+        // TODO: This is wrong and bad (incorrect inertia scaling calculations).
         if (!physicsA.IsStationary())
         {
             glm::mat3 rotationMatrixA = glm::mat3(transformA.GetRotationMatrix());
@@ -312,7 +316,7 @@ namespace Engine
             localInverseTensorA[0][0] *= (scaleA.y * scaleA.y + scaleA.z * scaleA.z) * 0.5f;
             localInverseTensorA[1][1] *= (scaleA.x * scaleA.x + scaleA.z * scaleA.z) * 0.5f;
             localInverseTensorA[2][2] *= (scaleA.x * scaleA.x + scaleA.y * scaleA.y) * 0.5f;
-            glm::mat3 inverseInertiaTensorWorldA = rotationMatrixA * localInverseTensorA * glm::transpose(rotationMatrixA);
+            inverseInertiaTensorWorldA = rotationMatrixA * localInverseTensorA * glm::transpose(rotationMatrixA);
             inertiaA = glm::cross(inverseInertiaTensorWorldA * glm::cross(relativeA, collision.normal), relativeA);
         }
         if (!physicsB.IsStationary())
@@ -323,12 +327,12 @@ namespace Engine
             localInverseTensorB[0][0] *= (scaleB.y * scaleB.y + scaleB.z * scaleB.z) * 0.5f;
             localInverseTensorB[1][1] *= (scaleB.x * scaleB.x + scaleB.z * scaleB.z) * 0.5f;
             localInverseTensorB[2][2] *= (scaleB.x * scaleB.x + scaleB.y * scaleB.y) * 0.5f;
-            glm::mat3 inverseInertiaTensorWorldB = rotationMatrixB * localInverseTensorB * glm::transpose(rotationMatrixB);
+            inverseInertiaTensorWorldB = rotationMatrixB * localInverseTensorB * glm::transpose(rotationMatrixB);
             inertiaB = glm::cross(inverseInertiaTensorWorldB * glm::cross(relativeB, collision.normal), relativeB);
         }
         float angularEffect = glm::dot(inertiaA + inertiaB, collision.normal);
         
-        // Calculate impulse magnitude.
+        // Calculate normal impulse magnitude.
         float e = std::min(physicsA.GetRestitution(), physicsB.GetRestitution());
         float j = -(1.0f + e) * velocityAlongNormal;
         j /= (physicsA.GetInverseMass() + physicsB.GetInverseMass() + angularEffect);
@@ -342,6 +346,56 @@ namespace Engine
         // Apply angular impulses.
         if (!physicsA.IsStationary()) physicsA.ApplyAngularImpulse(glm::cross(relativeA, -impulse));
         if (!physicsB.IsStationary()) physicsB.ApplyAngularImpulse(glm::cross(relativeB, impulse));
+        
+        // Calculate and apply friction impulses.
+        glm::vec3 tangent = relativeVelocity - velocityAlongNormal * collision.normal;
+        float tangentLength = glm::length(tangent);
+        
+        if (tangentLength > 0.0001f) // Avoid division by zero
+        {
+            tangent /= tangentLength; // Normalize tangent
+            
+            // Calculate angular effect for tangent direction.
+            glm::vec3 inertiaTangentA = glm::vec3(0);
+            glm::vec3 inertiaTangentB = glm::vec3(0);
+            
+            if (!physicsA.IsStationary())
+            {
+                inertiaTangentA = glm::cross(inverseInertiaTensorWorldA * glm::cross(relativeA, tangent), relativeA);
+            }
+            if (!physicsB.IsStationary())
+            {
+                inertiaTangentB = glm::cross(inverseInertiaTensorWorldB * glm::cross(relativeB, tangent), relativeB);
+            }
+            float angularEffectTangent = glm::dot(inertiaTangentA + inertiaTangentB, tangent);
+            
+            // Calculate friction impulse magnitude.
+            float jt = -glm::dot(relativeVelocity, tangent);
+            jt /= (physicsA.GetInverseMass() + physicsB.GetInverseMass() + angularEffectTangent);
+            
+            // Apply Coulomb friction (static vs dynamic).
+            float mu = (physicsA.GetFriction() + physicsB.GetFriction()) * 0.5f;
+            glm::vec3 frictionImpulse;
+            
+            if (std::abs(jt) < j * mu)
+            {
+                // Static friction
+                frictionImpulse = jt * tangent;
+            }
+            else
+            {
+                // Dynamic friction
+                frictionImpulse = -j * mu * tangent;
+            }
+            
+            // Apply friction impulses.
+            if (!physicsA.IsStationary()) physicsA.ApplyLinearImpulse(-frictionImpulse);
+            if (!physicsB.IsStationary()) physicsB.ApplyLinearImpulse(frictionImpulse);
+            
+            // Apply angular friction impulses.
+            if (!physicsA.IsStationary()) physicsA.ApplyAngularImpulse(glm::cross(relativeA, -frictionImpulse));
+            if (!physicsB.IsStationary()) physicsB.ApplyAngularImpulse(glm::cross(relativeB, frictionImpulse));
+        }
         
         // Separate objects.
         float totalInverseMass = physicsA.GetInverseMass() + physicsB.GetInverseMass();
