@@ -111,6 +111,11 @@ namespace Engine
             return;
         }
     }
+    void Texture::SetBorder(const Color& color)
+    {
+        const GLfloat value[4] = { color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f };
+        glTextureParameterfv(GetBackendTexture(), GL_TEXTURE_BORDER_COLOR, value);
+    }
     void Texture::SetMinification(Minification minification)
     {
         switch (minification)
@@ -134,11 +139,6 @@ namespace Engine
                 glTextureParameteri(GetBackendTexture(), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             return;
         }
-    }
-    void Texture::SetBorderColor(const Color& color)
-    {
-        const GLfloat value[4] = { color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f };
-        glTextureParameterfv(GetBackendTexture(), GL_TEXTURE_BORDER_COLOR, value);
     }
     void Texture::Bind(unsigned int unit) const
     {

@@ -10,9 +10,9 @@ namespace Engine
     {
         private:
 
-        Color m_Color = Color("#FFFFFFFF");
-        float m_Length = 50.0f;
-        float m_NearPlane = 0.1f;
+        Color m_Color = Color::White;
+        float m_Length = 100.0f;
+        float m_NearPlane = 0.0f;
         float m_FarPlane = 100.0f;
 
         public:

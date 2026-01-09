@@ -131,22 +131,22 @@ int main(void)
                 switch (input.PopFirstKey())
                 {
                     case Key::Z:
-                        forward = camera.GetForward();
+                        forward = camera.GetForward(transform);
                         direction = glm::normalize(glm::vec2(forward.x, forward.y));
                         transform.TranslateBy(direction.x * 0.2, direction.y * 0.2, 0);
                     break;
                     case Key::S:
-                        forward = camera.GetForward();
+                        forward = camera.GetForward(transform);
                         direction = - glm::normalize(glm::vec2(forward.x, forward.y));
                         transform.TranslateBy(direction.x * 0.2, direction.y * 0.2, 0);
                     break;
                     case Key::D:
-                        right = camera.GetRight();
+                        right = camera.GetRight(transform);
                         direction = glm::normalize(glm::vec2(right.x, right.y));
                         transform.TranslateBy(direction.x * 0.2, direction.y * 0.2, 0);
                     break;
                     case Key::Q:
-                        right = camera.GetRight();
+                        right = camera.GetRight(transform);
                         direction = - glm::normalize(glm::vec2(right.x, right.y));
                         transform.TranslateBy(direction.x * 0.2, direction.y * 0.2, 0);
                     break;
@@ -180,7 +180,6 @@ int main(void)
         window.SetTitle(format("FPS: {:.2f}", 1 / deltaTime));
         solver.Solve(world, deltaTime);
         renderer.Render(world, window);
-        window.SwapBuffers();
     }
 
     return 0;

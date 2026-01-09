@@ -27,9 +27,9 @@ namespace Engine
     }
     void Camera::SetTilt(float degrees) { m_Tilt = glm::clamp(glm::radians(degrees), glm::radians(-89.0f), glm::radians(89.0f)); }
     void Camera::SetRoll(float degrees) { m_Roll = glm::clamp(glm::radians(degrees), glm::radians(-89.0f), glm::radians(89.0f)); }
-    glm::vec3 Camera::GetUp() { return glm::quat(glm::vec3(m_Tilt, m_Roll, m_Pan)) * glm::vec3(0, 0, 1); }
-    glm::vec3 Camera::GetRight() { return glm::quat(glm::vec3(m_Tilt, m_Roll, m_Pan)) * glm::vec3(1, 0, 0); }
-    glm::vec3 Camera::GetForward() { return glm::quat(glm::vec3(m_Tilt, m_Roll, m_Pan)) * glm::vec3(0, 1, 0); }
+    glm::vec3 Camera::GetUp(const Transform& transform) { return transform.GetOrientation() * glm::quat(glm::vec3(m_Tilt, m_Roll, m_Pan)) * glm::vec3(0, 0, 1); }
+    glm::vec3 Camera::GetRight(const Transform& transform) { return transform.GetOrientation() * glm::quat(glm::vec3(m_Tilt, m_Roll, m_Pan)) * glm::vec3(1, 0, 0); }
+    glm::vec3 Camera::GetForward(const Transform& transform) { return transform.GetOrientation() * glm::quat(glm::vec3(m_Tilt, m_Roll, m_Pan)) * glm::vec3(0, 1, 0); }
     glm::mat4 Camera::GetProjectionMatrix(float aspectRatio) const
     {
         glm::mat4 rotation = glm::mat4_cast(glm::quat(glm::vec3(m_Tilt, m_Roll, m_Pan)));

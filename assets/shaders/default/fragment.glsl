@@ -24,6 +24,8 @@ float shadow(vec4 fragmentPositionLightSpace)
     // Transform these coordinates to texture space so we can sample the closest depth from the shadow map.
     projectedCoordinates = projectedCoordinates * 0.5 + 0.5;
 
+    if (projectedCoordinates.z > 1.0) return 0.0;
+
     // Get the closest depth from the light's perspective.
     float closestDepth = texture(shadowMap, projectedCoordinates.xy).r; 
 
@@ -31,7 +33,7 @@ float shadow(vec4 fragmentPositionLightSpace)
     float currentDepth = projectedCoordinates.z;
 
     // Check if it is in shadow with a small bias to reduce shadow acne.
-    float bias = 0.0005;
+    float bias = 0.001;
     float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
 
     return shadow;
@@ -52,9 +54,8 @@ void main()
 
     // Specular
     vec3 cameraDirection = normalize(cameraPosition - fragmentPosition);
-    float specularStrength = 0.0;
     vec3 halfwayDirection = normalize(lightDirection + cameraDirection);  
-    specularStrength = pow(max(dot(normal, halfwayDirection), 0.0), 64.0);
+    float specularStrength = pow(max(dot(normal, halfwayDirection), 0.0), 64.0);
     vec3 specular = specularStrength * lightColor;
 
     // Shadow

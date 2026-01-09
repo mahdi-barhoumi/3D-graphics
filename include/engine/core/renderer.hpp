@@ -14,6 +14,25 @@ namespace Engine
 
     class Renderer
     {
+        public:
+
+        enum class DepthTest
+        {
+            Never,
+            Less,
+            Equal,
+            LessOrEqual,
+            Greater,
+            NotEqual,
+            GreaterOrEqual,
+            Always
+        };
+
+        Renderer();
+        ~Renderer() = default;
+
+        void Render(World& world, Window& window);
+
         private:
 
         Shader m_Shader = Shader("./assets/shaders/default/vertex.glsl", "./assets/shaders/default/fragment.glsl");
@@ -33,17 +52,11 @@ namespace Engine
         void ClearDepth();
         void ClearStencil();
         void ClearColor(const Color& color);
-        void EnableDepthTest();
-        void DisableDepthTest();
         void EnableFaceCulling();
         void DisableFaceCulling();
-
-        public:
-
-        Renderer();
-        ~Renderer() = default;
-
-        void Render(World& world, Window& window);
+        void EnableDepthTesting();
+        void DisableDepthTesting();
+        void DepthTestFunction(DepthTest test);
 
     };
 }

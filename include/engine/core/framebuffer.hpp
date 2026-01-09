@@ -1,3 +1,4 @@
+#pragma once
 #include <memory>
 #include <glew/glew.hpp>
 #include <engine/core/texture.hpp>

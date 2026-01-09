@@ -11,41 +11,22 @@ namespace Engine
     {
         std::vector<VertexP3C4> vertices;
         vertices.push_back({ .position = glm::vec3(0.0f, 0.0f, 0.0f), .color = Color::Red });
-        vertices.push_back({ .position = glm::vec3(5.0f, 0.0f, 0.0f), .color = Color::Red });
+        vertices.push_back({ .position = glm::vec3(0.1f, 0.0f, 0.0f), .color = Color::Red });
         vertices.push_back({ .position = glm::vec3(0.0f, 0.0f, 0.0f), .color = Color::Green });
-        vertices.push_back({ .position = glm::vec3(0.0f, 5.0f, 0.0f), .color = Color::Green });
+        vertices.push_back({ .position = glm::vec3(0.0f, 0.1f, 0.0f), .color = Color::Green });
         vertices.push_back({ .position = glm::vec3(0.0f, 0.0f, 0.0f), .color = Color::Blue });
-        vertices.push_back({ .position = glm::vec3(0.0f, 0.0f, 5.0f), .color = Color::Blue });
+        vertices.push_back({ .position = glm::vec3(0.0f, 0.0f, 0.1f), .color = Color::Blue });
         std::vector<unsigned int> indices {0, 1, 2, 3, 4, 5};
         m_AxisMesh = Mesh(vertices, indices, Mesh::Primitive::Lines);
 
-        m_LightTransform.TranslateTo(0, 0, 25);
         m_LightTransform.RotateBy(glm::radians(15.0f), 0.0f, 0.0f);
 
         m_ShadowMap.SetWrap(Texture::Wrap::ClampToBorder);
-        m_ShadowMap.SetBorderColor(Color::White);
+        m_ShadowMap.SetBorder(1.0f);
     }
     void Renderer::Render(World& world, Window& window)
     {
         window.MakeCurrent();
-
-        glm::mat4 vertexPositionTransformationMatrix;
-        EnableFaceCulling();
-        EnableDepthTest();
-
-        // Shadow pass
-        m_ShadowFramebuffer.Bind();
-        ClearDepth();
-
-        for (auto [handle, transform, mesh, texture] : world.View<Transform, Mesh, Texture>())
-        {
-            vertexPositionTransformationMatrix = m_Light.GetProjectionMatrix() * m_LightTransform.GetInverseWorldMatrix() * transform.GetWorldMatrix();
-            m_ShadowShader.SetUniform("vertexPositionTransformationMatrix", vertexPositionTransformationMatrix);
-            m_ShadowShader.Draw(mesh);
-        }
-
-        // Second pass
-        Framebuffer::Default.Bind();
 
         // TODO: Find a better way to get the main camera, Probably a world member variable.
         Camera firstCamera;
@@ -59,15 +40,31 @@ namespace Engine
             break;
         }
 
-        EnableDepthTest();
+        glm::mat4 vertexPositionTransformationMatrix;
+        EnableFaceCulling();
+        EnableDepthTesting();
+        DepthTestFunction(DepthTest::Less);
+
+        // Shadow pass
+        m_ShadowFramebuffer.Bind();
+        ClearDepth();
+
+        m_LightTransform.TranslateTo(firstCameraTransform.GetPosition() + glm::vec3(0.0f, 0.0f, 10.0f));
+        for (auto [handle, transform, mesh, texture] : world.View<Transform, Mesh, Texture>())
+        {
+            vertexPositionTransformationMatrix = m_Light.GetProjectionMatrix() * m_LightTransform.GetInverseWorldMatrix() * transform.GetWorldMatrix();
+            m_ShadowShader.SetUniform("vertexPositionTransformationMatrix", vertexPositionTransformationMatrix);
+            m_ShadowShader.Draw(mesh);
+        }
+
+        // Second pass
+        Framebuffer::Default.Bind();
+
+        EnableDepthTesting();
         EnableFaceCulling();
 
         ClearColor(m_SkyColor);
         ClearDepth();
-
-        vertexPositionTransformationMatrix = firstCamera.GetProjectionMatrix(window.GetAspectRatio()) * firstCameraTransform.GetInverseWorldMatrix();
-        m_AxisShader.SetUniform("vertexPositionTransformationMatrix", vertexPositionTransformationMatrix);
-        m_AxisShader.Draw(m_AxisMesh);
 
         m_Shader.SetUniform("cameraPosition", firstCameraTransform.GetPosition());
         m_Shader.SetUniform("cameraView", firstCameraTransform.GetInverseWorldMatrix());
@@ -80,12 +77,22 @@ namespace Engine
         m_Shader.SetUniform("diffuseTexture", 0);
         m_Shader.SetUniform("shadowMap", 1);
         m_ShadowMap.Bind(1);
+        
         for (auto [handle, transform, mesh, texture] : world.View<Transform, Mesh, Texture>())
         {
             texture.Bind(0);
             m_Shader.SetUniform("world", transform.GetWorldMatrix());
             m_Shader.Draw(mesh);
         }
+
+        DepthTestFunction(DepthTest::Always);
+        Transform test = firstCameraTransform;
+        test.TranslateBy(firstCamera.GetForward(firstCameraTransform));
+        vertexPositionTransformationMatrix = firstCamera.GetProjectionMatrix(window.GetAspectRatio()) * firstCameraTransform.GetInverseWorldMatrix() * test.GetWorldMatrix();
+        m_AxisShader.SetUniform("vertexPositionTransformationMatrix", vertexPositionTransformationMatrix);
+        m_AxisShader.Draw(m_AxisMesh);
+
+        window.SwapBuffers();
     }
     void Renderer::ClearDepth() { glClear(GL_DEPTH_BUFFER_BIT); }
     void Renderer::ClearStencil() { glClear(GL_STENCIL_BUFFER_BIT); }
@@ -94,8 +101,22 @@ namespace Engine
         glClearColor(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
         glClear(GL_COLOR_BUFFER_BIT);
     }
-    void Renderer::EnableDepthTest() { glEnable(GL_DEPTH_TEST); }
-    void Renderer::DisableDepthTest() { glDisable(GL_DEPTH_TEST); }
+    void Renderer::EnableDepthTesting() { glEnable(GL_DEPTH_TEST); }
+    void Renderer::DisableDepthTesting() { glDisable(GL_DEPTH_TEST); }
     void Renderer::EnableFaceCulling() { glEnable(GL_CULL_FACE); }
     void Renderer::DisableFaceCulling() { glDisable(GL_CULL_FACE); }
+    void Renderer::DepthTestFunction(DepthTest test)
+    {
+        switch (test)
+        {
+            case DepthTest::Never: glDepthFunc(GL_NEVER); return;
+            case DepthTest::Less: glDepthFunc(GL_LESS); return;
+            case DepthTest::Equal: glDepthFunc(GL_EQUAL); return;
+            case DepthTest::LessOrEqual: glDepthFunc(GL_LEQUAL); return;
+            case DepthTest::Greater: glDepthFunc(GL_GREATER); return;
+            case DepthTest::NotEqual: glDepthFunc(GL_NOTEQUAL); return;
+            case DepthTest::GreaterOrEqual: glDepthFunc(GL_GEQUAL); return;
+            case DepthTest::Always: glDepthFunc(GL_ALWAYS); return;
+        }
+    }
 }

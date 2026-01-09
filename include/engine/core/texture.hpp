@@ -48,9 +48,9 @@ namespace Engine
 
         void Bind(unsigned int unit) const;
         void SetWrap(Wrap wrap);
+        void SetBorder(const Color& color);
         void SetMinification(Minification minification);
         void SetMagnification(Magnification magnification);
-        void SetBorderColor(const Color& color);
         unsigned int GetWidth() const;
         unsigned int GetHeight() const;
 

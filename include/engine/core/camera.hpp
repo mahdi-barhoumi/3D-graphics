@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <engine/core/transform.hpp>
 #include <engine/core/component.hpp>
 
 namespace Engine
@@ -37,9 +38,9 @@ namespace Engine
         void SetPan(float degrees);
         void SetTilt(float degrees);
         void SetRoll(float degrees);
-        glm::vec3 GetUp();
-        glm::vec3 GetRight();
-        glm::vec3 GetForward();
+        glm::vec3 GetUp(const Transform& transform);
+        glm::vec3 GetRight(const Transform& transform);
+        glm::vec3 GetForward(const Transform& transform);
         glm::mat4 GetProjectionMatrix(float aspectRatio) const;
 
     };
