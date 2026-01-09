@@ -23,6 +23,10 @@ namespace Engine
 
         m_ShadowMap.SetWrap(Texture::Wrap::ClampToBorder);
         m_ShadowMap.SetBorder(1.0f);
+        m_ShadowMap.SetMinification(Texture::Minification::Linear);
+        m_ShadowMap.SetMagnification(Texture::Magnification::Linear);
+        m_ShadowMap.SetCompareMode(Texture::CompareMode::ReferenceToTexture);
+        m_ShadowMap.SetCompareFunction(Texture::CompareFunction::LessOrEqual);
     }
     void Renderer::Render(World& world, Window& window)
     {
@@ -93,30 +97,5 @@ namespace Engine
         m_AxisShader.Draw(m_AxisMesh);
 
         window.SwapBuffers();
-    }
-    void Renderer::ClearDepth() { glClear(GL_DEPTH_BUFFER_BIT); }
-    void Renderer::ClearStencil() { glClear(GL_STENCIL_BUFFER_BIT); }
-    void Renderer::ClearColor(const Color& color)
-    {
-        glClearColor(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-    }
-    void Renderer::EnableDepthTesting() { glEnable(GL_DEPTH_TEST); }
-    void Renderer::DisableDepthTesting() { glDisable(GL_DEPTH_TEST); }
-    void Renderer::EnableFaceCulling() { glEnable(GL_CULL_FACE); }
-    void Renderer::DisableFaceCulling() { glDisable(GL_CULL_FACE); }
-    void Renderer::DepthTestFunction(DepthTest test)
-    {
-        switch (test)
-        {
-            case DepthTest::Never: glDepthFunc(GL_NEVER); return;
-            case DepthTest::Less: glDepthFunc(GL_LESS); return;
-            case DepthTest::Equal: glDepthFunc(GL_EQUAL); return;
-            case DepthTest::LessOrEqual: glDepthFunc(GL_LEQUAL); return;
-            case DepthTest::Greater: glDepthFunc(GL_GREATER); return;
-            case DepthTest::NotEqual: glDepthFunc(GL_NOTEQUAL); return;
-            case DepthTest::GreaterOrEqual: glDepthFunc(GL_GEQUAL); return;
-            case DepthTest::Always: glDepthFunc(GL_ALWAYS); return;
-        }
     }
 }

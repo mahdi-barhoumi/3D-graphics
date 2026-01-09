@@ -13,12 +13,7 @@ namespace Engine
 
         if (!VAO || !VBO || !IBO) throw std::runtime_error("Could not generate buffers for mesh.");
 
-        switch (primitive)
-        {
-            case Primitive::Points: this->primitive = GL_POINTS; break;
-            case Primitive::Lines: this->primitive = GL_LINES; break;
-            case Primitive::Triangles: this->primitive = GL_TRIANGLES; break;
-        }
+        this->primitive = static_cast<GLenum>(primitive);
         indexCount = static_cast<GLsizei>(indices.size());
 
         glNamedBufferData(IBO, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
@@ -44,12 +39,7 @@ namespace Engine
 
         if (!VAO || !VBO || !IBO) throw std::runtime_error("Could not generate buffers for mesh.");
 
-        switch (primitive)
-        {
-            case Primitive::Points: this->primitive = GL_POINTS; break;
-            case Primitive::Lines: this->primitive = GL_LINES; break;
-            case Primitive::Triangles: this->primitive = GL_TRIANGLES; break;
-        }
+        this->primitive = static_cast<GLenum>(primitive);
         indexCount = static_cast<GLsizei>(indices.size());
 
         glNamedBufferData(IBO, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
