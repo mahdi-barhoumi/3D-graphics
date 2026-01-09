@@ -12,8 +12,8 @@ namespace Engine
 
         float m_Mass = 1.0f;
         float m_Drag = 0.4f;
-        float m_Friction = 0.1f;
-        float m_Restitution = 0.75f;
+        float m_Friction = 0.3f;
+        float m_Restitution = 0.3f;
         float m_InverseMass = 1.0f;
         bool m_Stationary = false;
         glm::vec3 m_Velocity = glm::vec3(0);
@@ -63,8 +63,8 @@ namespace Engine
         void ApplyForce(const glm::vec3& force);
         void ApplyTorque(const glm::vec3& torque);
         void ApplyLinearImpulse(const glm::vec3& impulse);
-        void ApplyAngularImpulse(const glm::vec3& impulse);
-        void Integrate(float deltaTime);
+        void ApplyAngularImpulse(const glm::vec3& impulse, const glm::mat3& worldInverseInertiaTensor);
+        void Integrate(float deltaTime, const glm::mat3& worldInverseInertiaTensor);
         void ResetAccumulators();
         bool IsStationary() const;
         Collider& GetCollider() const;

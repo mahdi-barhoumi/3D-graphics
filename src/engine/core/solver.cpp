@@ -311,23 +311,15 @@ namespace Engine
         if (!physicsA.IsStationary())
         {
             glm::mat3 rotationMatrixA = glm::mat3(transformA.GetRotationMatrix());
-            glm::vec3 scaleA = transformA.GetScale();
-            glm::mat3 localInverseTensorA = physicsA.GetInverseInertiaTensor();
-            localInverseTensorA[0][0] *= (scaleA.y * scaleA.y + scaleA.z * scaleA.z) * 0.5f;
-            localInverseTensorA[1][1] *= (scaleA.x * scaleA.x + scaleA.z * scaleA.z) * 0.5f;
-            localInverseTensorA[2][2] *= (scaleA.x * scaleA.x + scaleA.y * scaleA.y) * 0.5f;
-            inverseInertiaTensorWorldA = rotationMatrixA * localInverseTensorA * glm::transpose(rotationMatrixA);
+            glm::mat3 inverseScalingMatrixA = glm::mat3(transformA.GetInverseScalingMatrix());
+            inverseInertiaTensorWorldA = rotationMatrixA * inverseScalingMatrixA * physicsA.GetInverseInertiaTensor() * inverseScalingMatrixA * glm::transpose(rotationMatrixA);
             inertiaA = glm::cross(inverseInertiaTensorWorldA * glm::cross(relativeA, collision.normal), relativeA);
         }
         if (!physicsB.IsStationary())
         {
             glm::mat3 rotationMatrixB = glm::mat3(transformB.GetRotationMatrix());
-            glm::vec3 scaleB = transformB.GetScale();
-            glm::mat3 localInverseTensorB = physicsB.GetInverseInertiaTensor();
-            localInverseTensorB[0][0] *= (scaleB.y * scaleB.y + scaleB.z * scaleB.z) * 0.5f;
-            localInverseTensorB[1][1] *= (scaleB.x * scaleB.x + scaleB.z * scaleB.z) * 0.5f;
-            localInverseTensorB[2][2] *= (scaleB.x * scaleB.x + scaleB.y * scaleB.y) * 0.5f;
-            inverseInertiaTensorWorldB = rotationMatrixB * localInverseTensorB * glm::transpose(rotationMatrixB);
+            glm::mat3 inverseScalingMatrixB = glm::mat3(transformB.GetInverseScalingMatrix());
+            inverseInertiaTensorWorldB = rotationMatrixB * inverseScalingMatrixB * physicsB.GetInverseInertiaTensor() * inverseScalingMatrixB * glm::transpose(rotationMatrixB);
             inertiaB = glm::cross(inverseInertiaTensorWorldB * glm::cross(relativeB, collision.normal), relativeB);
         }
         float angularEffect = glm::dot(inertiaA + inertiaB, collision.normal);
@@ -344,8 +336,8 @@ namespace Engine
         if (!physicsB.IsStationary()) physicsB.ApplyLinearImpulse(impulse);
         
         // Apply angular impulses.
-        if (!physicsA.IsStationary()) physicsA.ApplyAngularImpulse(glm::cross(relativeA, -impulse));
-        if (!physicsB.IsStationary()) physicsB.ApplyAngularImpulse(glm::cross(relativeB, impulse));
+        if (!physicsA.IsStationary()) physicsA.ApplyAngularImpulse(glm::cross(relativeA, -impulse), inverseInertiaTensorWorldA);
+        if (!physicsB.IsStationary()) physicsB.ApplyAngularImpulse(glm::cross(relativeB, impulse), inverseInertiaTensorWorldB);
         
         // Calculate and apply friction impulses.
         glm::vec3 tangent = relativeVelocity - velocityAlongNormal * collision.normal;
@@ -393,8 +385,8 @@ namespace Engine
             if (!physicsB.IsStationary()) physicsB.ApplyLinearImpulse(frictionImpulse);
             
             // Apply angular friction impulses.
-            if (!physicsA.IsStationary()) physicsA.ApplyAngularImpulse(glm::cross(relativeA, -frictionImpulse));
-            if (!physicsB.IsStationary()) physicsB.ApplyAngularImpulse(glm::cross(relativeB, frictionImpulse));
+            if (!physicsA.IsStationary()) physicsA.ApplyAngularImpulse(glm::cross(relativeA, -frictionImpulse), inverseInertiaTensorWorldA);
+            if (!physicsB.IsStationary()) physicsB.ApplyAngularImpulse(glm::cross(relativeB, frictionImpulse), inverseInertiaTensorWorldB);
         }
         
         // Separate objects.
@@ -416,7 +408,10 @@ namespace Engine
 
             physics.ApplyForce(m_Gravity * physics.GetMass() * glm::vec3(0, 0, -1));
             
-            physics.Integrate(deltaTime);
+            glm::mat3 rotationMatrix = glm::mat3(transform.GetRotationMatrix());
+            glm::mat3 inverseScalingMatrix = glm::mat3(transform.GetInverseScalingMatrix());
+            glm::mat3 inverseInertiaTensorWorld = rotationMatrix * inverseScalingMatrix * physics.GetInverseInertiaTensor() * inverseScalingMatrix * glm::transpose(rotationMatrix);
+            physics.Integrate(deltaTime, inverseInertiaTensorWorld);
 
             transform.TranslateBy(physics.GetVelocity() * deltaTime);
             

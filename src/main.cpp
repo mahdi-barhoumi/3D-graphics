@@ -67,7 +67,7 @@ int main(void)
             Handle cubeHandle = world.Create();
             Object cube = world.Get(cubeHandle);
             Transform cubeTransform;
-            cubeTransform.TranslateTo(2 * i - 10,  2 * j - 10, 10.0f);
+            cubeTransform.TranslateTo(2 * i - 10,  2 * j - 10, 25.0f);
             cube.Add<Transform>(cubeTransform);
             cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
             cube.Add<Texture>(Texture("./assets/textures/wood.png"));
@@ -82,7 +82,7 @@ int main(void)
             Handle sphereHandle = world.Create();
             Object sphere = world.Get(sphereHandle);
             Transform sphereTransform;
-            sphereTransform.TranslateTo(2 * i - 10,  2 * j - 10, 25.0f);
+            sphereTransform.TranslateTo(2 * i - 10,  2 * j - 10, 10.0f);
             sphere.Add<Transform>(sphereTransform);
             sphere.Add<Mesh>(Mesh("./assets/meshes/sphere.obj"));
             sphere.Add<Texture>(Texture("./assets/textures/wood.png"));

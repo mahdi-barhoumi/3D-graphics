@@ -21,19 +21,19 @@ namespace Engine
     void Physics::ApplyForce(const glm::vec3& force) { m_ForceAccumulator += force; }
     void Physics::ApplyTorque(const glm::vec3& torque) { m_TorqueAccumulator += torque; }
     void Physics::ApplyLinearImpulse(const glm::vec3& impulse) { m_Velocity += impulse * m_InverseMass; }
-    void Physics::ApplyAngularImpulse(const glm::vec3& impulse) { m_AngularVelocity += m_CachedInverseInertiaTensor * impulse; }
+    void Physics::ApplyAngularImpulse(const glm::vec3& impulse, const glm::mat3& worldInverseInertiaTensor) { m_AngularVelocity += worldInverseInertiaTensor * impulse; }
     void Physics::ResetAccumulators()
     {
         m_ForceAccumulator = glm::vec3(0);
         m_TorqueAccumulator = glm::vec3(0);
     }
     bool Physics::IsStationary() const { return m_Stationary; }
-    void Physics::Integrate(float deltaTime)
+    void Physics::Integrate(float deltaTime, const glm::mat3& worldInverseInertiaTensor)
     {
         m_Velocity += m_ForceAccumulator * m_InverseMass * deltaTime;
         m_Velocity *= 1.0f - m_Drag * deltaTime;
 
-        m_AngularVelocity += m_CachedInverseInertiaTensor * m_TorqueAccumulator * deltaTime;
+        m_AngularVelocity += worldInverseInertiaTensor * m_TorqueAccumulator * deltaTime;
         m_AngularVelocity *= 1.0f - m_Drag * deltaTime;
     }
     Collider& Physics::GetCollider() const { return *m_Collider; }
