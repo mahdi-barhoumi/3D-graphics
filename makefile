@@ -15,8 +15,8 @@ CPP_SRCS = $(call rwildcard,$(SRC_DIR)/,*.cpp)
 
 # Base flags
 BASE_CFLAGS   = -I$(INCLUDE_DIR)
-BASE_CXXFLAGS = -std=c++23 -I$(INCLUDE_DIR) -DGLEW_STATIC -DSTB_IMAGE_IMPLEMENTATION -DGLFW_EXPOSE_NATIVE_WIN32 -DGLFW_EXPOSE_NATIVE_WGL
-BASE_LDFLAGS  = -L$(LIB_DIR) -lglew -lglfw -lopengl32 -lgdi32 -luser32 -lkernel32
+BASE_CXXFLAGS = -std=c++23 -I$(INCLUDE_DIR) -DGLEW_STATIC -DSTB_IMAGE_IMPLEMENTATION -DGLFW_EXPOSE_NATIVE_WIN32 -DGLFW_EXPOSE_NATIVE_WGL -DAL_LIBTYPE_STATIC
+BASE_LDFLAGS  = -L$(LIB_DIR) -lglew -lglfw -lopengl32 -lopenal32 -lgdi32 -luser32 -lkernel32 -lshell32 -lole32 -luuid -lwinmm -lavrt
 
 # Debug configuration
 DEBUG_OBJ_DIR = $(BUILD_DIR)/debug

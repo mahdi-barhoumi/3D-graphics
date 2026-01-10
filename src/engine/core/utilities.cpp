@@ -124,4 +124,5 @@ namespace Engine::Utilities
         stbi_image_free(data);
         return true;
     }
+    bool LoadWAVFile(std::string path /*, ... */) { return false; }
 }

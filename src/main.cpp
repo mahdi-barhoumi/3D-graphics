@@ -67,7 +67,7 @@ int main(void)
             Handle cubeHandle = world.Create();
             Object cube = world.Get(cubeHandle);
             Transform cubeTransform;
-            cubeTransform.TranslateTo(2 * i - 10,  2 * j - 10, 25.0f);
+            cubeTransform.TranslateTo(2 * i - 10,  2 * j - 10, 20.0f);
             cube.Add<Transform>(cubeTransform);
             cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
             cube.Add<Texture>(Texture("./assets/textures/wood.png"));
