@@ -1,6 +1,7 @@
 #include <glm/glm.hpp>
 #include <glew/glew.hpp>
 #include <engine/core/mesh.hpp>
+#include <engine/core/object.hpp>
 #include <engine/core/camera.hpp>
 #include <engine/core/vertex.hpp>
 #include <engine/core/renderer.hpp>
@@ -30,19 +31,12 @@ namespace Engine
     }
     void Renderer::Render(World& world, Window& window)
     {
-        window.MakeCurrent();
+        Object cameraObject = world.GetActiveCamera();
+        if (!cameraObject.IsValid()) return;
+        const Camera& camera = cameraObject.Get<Camera>();
+        const Transform& cameraTransform = cameraObject.Get<Transform>();
 
-        // TODO: Find a better way to get the main camera, Probably a world member variable.
-        Camera firstCamera;
-        Handle firstCameraHandle;
-        Transform firstCameraTransform;
-        for (auto [handle, transform, camera] : world.View<Transform, Camera>())
-        {
-            firstCameraHandle = handle;
-            firstCameraTransform = transform;
-            firstCamera = camera;
-            break;
-        }
+        window.MakeCurrent();
 
         glm::mat4 vertexPositionTransformationMatrix;
         EnableFaceCulling();
@@ -53,7 +47,7 @@ namespace Engine
         m_ShadowFramebuffer.Bind();
         ClearDepth();
 
-        m_LightTransform.TranslateTo(firstCameraTransform.GetPosition() + glm::vec3(0.0f, 0.0f, 10.0f));
+        m_LightTransform.TranslateTo(cameraTransform.GetPosition() + glm::vec3(0.0f, 0.0f, 10.0f));
         for (auto [handle, transform, mesh, texture] : world.View<Transform, Mesh, Texture>())
         {
             vertexPositionTransformationMatrix = m_Light.GetProjectionMatrix() * m_LightTransform.GetInverseWorldMatrix() * transform.GetWorldMatrix();
@@ -70,9 +64,9 @@ namespace Engine
         ClearColor(m_SkyColor);
         ClearDepth();
 
-        m_Shader.SetUniform("cameraPosition", firstCameraTransform.GetPosition());
-        m_Shader.SetUniform("cameraView", firstCameraTransform.GetInverseWorldMatrix());
-        m_Shader.SetUniform("cameraProjection", firstCamera.GetProjectionMatrix(window.GetAspectRatio()));
+        m_Shader.SetUniform("cameraPosition", cameraTransform.GetPosition());
+        m_Shader.SetUniform("cameraView", cameraTransform.GetInverseWorldMatrix());
+        m_Shader.SetUniform("cameraProjection", camera.GetProjectionMatrix(window.GetAspectRatio()));
         m_Shader.SetUniform("lightPosition", m_LightTransform.GetPosition());
         m_Shader.SetUniform("lightColor", m_Light.GetColor());
         m_Shader.SetUniform("lightView", m_LightTransform.GetInverseWorldMatrix());
@@ -90,9 +84,9 @@ namespace Engine
         }
 
         DepthTestFunction(DepthTest::Always);
-        Transform test = firstCameraTransform;
-        test.TranslateBy(firstCamera.GetForward(firstCameraTransform));
-        vertexPositionTransformationMatrix = firstCamera.GetProjectionMatrix(window.GetAspectRatio()) * firstCameraTransform.GetInverseWorldMatrix() * test.GetWorldMatrix();
+        Transform axisTransform = cameraTransform;
+        axisTransform.TranslateBy(camera.GetWorldForward(cameraTransform.GetOrientation()));
+        vertexPositionTransformationMatrix = camera.GetProjectionMatrix(window.GetAspectRatio()) * cameraTransform.GetInverseWorldMatrix() * axisTransform.GetWorldMatrix();
         m_AxisShader.SetUniform("vertexPositionTransformationMatrix", vertexPositionTransformationMatrix);
         m_AxisShader.Draw(m_AxisMesh);
 
