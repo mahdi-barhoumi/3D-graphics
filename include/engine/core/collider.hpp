@@ -1,4 +1,5 @@
 #pragma once
+#include <engine/core/math.hpp>
 #include <engine/core/transform.hpp>
 
 namespace Engine
@@ -20,10 +21,10 @@ namespace Engine
 
         Collider() = default;
         ~Collider() = default;
-        virtual glm::mat3 GetInertiaTensor(float mass) const = 0;
-        virtual glm::mat3 GetInverseInertiaTensor(float mass) const final;
-        virtual glm::vec3 GetSupport(const glm::vec3& direction) const = 0;
-        virtual glm::vec3 GetWorldSupport(const Transform& transform, const glm::vec3& direction) const final;
+        virtual Matrix3 GetInertiaTensor(float mass) const = 0;
+        virtual Matrix3 GetInverseInertiaTensor(float mass) const final;
+        virtual Vector3 GetSupport(const Vector3& direction) const = 0;
+        virtual Vector3 GetWorldSupport(const Transform& transform, const Vector3& direction) const final;
         
         protected:
 
@@ -46,8 +47,8 @@ namespace Engine
         CubeCollider(float length);
         ~CubeCollider() = default;
 
-        glm::mat3 GetInertiaTensor(float mass) const override;
-        glm::vec3 GetSupport(const glm::vec3& direction) const override;
+        Matrix3 GetInertiaTensor(float mass) const override;
+        Vector3 GetSupport(const Vector3& direction) const override;
 
     };
 
@@ -63,8 +64,8 @@ namespace Engine
         PlaneCollider(float length);
         ~PlaneCollider() = default;
 
-        glm::mat3 GetInertiaTensor(float mass) const override;
-        glm::vec3 GetSupport(const glm::vec3& direction) const override;
+        Matrix3 GetInertiaTensor(float mass) const override;
+        Vector3 GetSupport(const Vector3& direction) const override;
 
     };
 
@@ -80,8 +81,8 @@ namespace Engine
         SphereCollider(float radius);
         ~SphereCollider() = default;
 
-        glm::mat3 GetInertiaTensor(float mass) const override;
-        glm::vec3 GetSupport(const glm::vec3& direction) const override;
+        Matrix3 GetInertiaTensor(float mass) const override;
+        Vector3 GetSupport(const Vector3& direction) const override;
 
     };
 }

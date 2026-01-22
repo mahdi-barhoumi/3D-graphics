@@ -2,10 +2,17 @@
 
 namespace Engine
 {
-    glm::mat4 Light::GetProjectionMatrix() const
+    Matrix4 Light::GetProjectionMatrix() const
     {
-        return glm::ortho(- m_Length * 0.5f, m_Length * 0.5f, - m_Length * 0.5f, m_Length * 0.5f, m_NearPlane, m_FarPlane);
+        const float inverse = 1.0f / (m_NearPlane - m_FarPlane);
+        Matrix4 projection(1.0f);
+		projection[0][0] = -2.0f / m_Length;
+		projection[1][1] = -2.0f / m_Length;
+		projection[2][2] = 2.0f * inverse;
+		projection[3][2] = (m_FarPlane + m_NearPlane) * inverse;
+        return projection;
     }
-    glm::vec3 Light::GetDirection(const Transform& transform) const { return transform.GetOrientation() * glm::vec3(0.0f, 0.0f, -1.0f); }
-    glm::vec3 Light::GetColor() const { return m_Color; }
+    Vector3 Light::GetLocalDirection() const { return Vector3(0.0f, 0.0f, -1.0f); }
+    Vector3 Light::GetWorldDirection(const Transform& transform) const { return Rotated(Vector3(0.0f, 0.0f, -1.0f), transform.GetOrientation()); }
+    Vector3 Light::GetColor() const { return m_Color; }
 }

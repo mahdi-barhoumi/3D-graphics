@@ -19,9 +19,9 @@ namespace Engine
     
         enum class Primitive
         {
-            Points,
-            Lines,
-            Triangles
+            Points = GL_POINTS,
+            Lines = GL_LINES,
+            Triangles = GL_TRIANGLES
         };
 
         Mesh() = default;

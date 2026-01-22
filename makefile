@@ -15,8 +15,8 @@ CPP_SRCS = $(call rwildcard,$(SRC_DIR)/,*.cpp)
 
 # Base flags
 BASE_CFLAGS   = -I$(INCLUDE_DIR)
-BASE_CXXFLAGS = -std=c++23 -I$(INCLUDE_DIR) -DGLEW_STATIC -DSTB_IMAGE_IMPLEMENTATION -DGLFW_EXPOSE_NATIVE_WIN32 -DGLFW_EXPOSE_NATIVE_WGL
-BASE_LDFLAGS  = -L$(LIB_DIR) -lglew -lglfw -lopengl32 -lgdi32 -luser32 -lkernel32
+BASE_CXXFLAGS = -std=c++23 -I$(INCLUDE_DIR) -DGLEW_STATIC -DSTB_IMAGE_IMPLEMENTATION -DGLFW_EXPOSE_NATIVE_WIN32 -DGLFW_EXPOSE_NATIVE_WGL -DAL_LIBTYPE_STATIC
+BASE_LDFLAGS  = -L$(LIB_DIR) -lglew -lglfw -lopengl32 -lopenal32 -lgdi32 -luser32 -lkernel32 -lshell32 -lole32 -luuid -lwinmm -lavrt
 
 # Debug configuration
 DEBUG_OBJ_DIR = $(BUILD_DIR)/debug
@@ -41,9 +41,9 @@ RELEASE_RESOURCE_OBJ = $(RELEASE_OBJ_DIR)/resource.o
 RELEASE_OBJS = $(RELEASE_C_OBJS) $(RELEASE_CPP_OBJS) $(RELEASE_RESOURCE_OBJ)
 RELEASE_C_DEPS   = $(patsubst $(SRC_DIR)/%.c,$(RELEASE_DEP_DIR)/%.d,$(C_SRCS))
 RELEASE_CPP_DEPS = $(patsubst $(SRC_DIR)/%.cpp,$(RELEASE_DEP_DIR)/%.d,$(CPP_SRCS))
-RELEASE_CFLAGS   = $(BASE_CFLAGS) -O3
-RELEASE_CXXFLAGS = $(BASE_CXXFLAGS) -O3
-RELEASE_LDFLAGS  = $(BASE_LDFLAGS) -static -static-libgcc -static-libstdc++ -mwindows
+RELEASE_CFLAGS   = $(BASE_CFLAGS) -O3 -march=native -ffast-math
+RELEASE_CXXFLAGS = $(BASE_CXXFLAGS) -O3 -march=native -ffast-math
+RELEASE_LDFLAGS  = $(BASE_LDFLAGS) -flto -static -static-libgcc -static-libstdc++ -mwindows
 RELEASE_TARGET   = Application
 
 .PHONY: debug release clean

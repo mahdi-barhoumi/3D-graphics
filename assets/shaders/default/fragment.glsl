@@ -14,27 +14,14 @@ uniform vec3 lightColor;
 uniform float ambientStrength;
 
 uniform sampler2D diffuseTexture;
-uniform sampler2D shadowMap;
+uniform sampler2DShadow shadowMap;
 
 float shadow(vec4 fragmentPositionLightSpace)
 {
-    // Perform prespective division to get the fragment's projected position in light space.
     vec3 projectedCoordinates = fragmentPositionLightSpace.xyz / fragmentPositionLightSpace.w;
-
-    // Transform these coordinates to texture space so we can sample the closest depth from the shadow map.
     projectedCoordinates = projectedCoordinates * 0.5 + 0.5;
-
-    // Get the closest depth from the light's perspective.
-    float closestDepth = texture(shadowMap, projectedCoordinates.xy).r; 
-
-    // Get the depth of the current fragment from the light's perspective.
-    float currentDepth = projectedCoordinates.z;
-
-    // Check if it is in shadow with a small bias to reduce shadow acne.
-    float bias = 0.0005;
-    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
-
-    return shadow;
+    float bias = 0.001;
+    return texture(shadowMap, vec3(projectedCoordinates.xy, projectedCoordinates.z - bias));
 }  
 
 void main()
@@ -52,15 +39,14 @@ void main()
 
     // Specular
     vec3 cameraDirection = normalize(cameraPosition - fragmentPosition);
-    float specularStrength = 0.0;
     vec3 halfwayDirection = normalize(lightDirection + cameraDirection);  
-    specularStrength = pow(max(dot(normal, halfwayDirection), 0.0), 64.0);
+    float specularStrength = pow(max(dot(normal, halfwayDirection), 0.0), 64.0);
     vec3 specular = specularStrength * lightColor;
 
     // Shadow
     float shadow = shadow(fragmentPositionLightSpace);     
 
     // Lighting  
-    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * diffuseColor;    
+    vec3 lighting = (ambient + shadow * (diffuse + specular)) * diffuseColor;    
     fragmentColor = vec4(lighting, 1.0);
 }

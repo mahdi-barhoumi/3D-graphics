@@ -2,7 +2,6 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
-#include <glm/glm.hpp>
 #include <engine/core/shader.hpp>
 
 namespace Engine

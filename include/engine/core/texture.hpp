@@ -17,26 +17,42 @@ namespace Engine
 
         enum class Format
         {
-            RGB,
-            RGBA,
-            Depth,
-            DepthStencil,
+            RGB = GL_RGB8,
+            RGBA = GL_RGBA8,
+            Depth = GL_DEPTH_COMPONENT24,
+            DepthStencil = GL_DEPTH24_STENCIL8,
         };
         enum class Minification
         {
-            Nearest,
-            Linear
+            Nearest = GL_NEAREST,
+            Linear = GL_LINEAR
         };
         enum class Magnification
         {
-            Nearest,
-            Linear
+            Nearest = GL_NEAREST,
+            Linear = GL_LINEAR
         };
         enum class Wrap
         {
-            Repeat,
-            ClampToEdge,
-            ClampToBorder
+            Repeat = GL_REPEAT,
+            ClampToEdge = GL_CLAMP_TO_EDGE,
+            ClampToBorder = GL_CLAMP_TO_BORDER
+        };
+        enum class CompareMode
+        {
+            None = GL_NONE,
+            ReferenceToTexture = GL_COMPARE_REF_TO_TEXTURE
+        };
+        enum class CompareFunction
+        {
+            Never = GL_NEVER,
+            Less = GL_LESS,
+            Equal = GL_EQUAL,
+            LessOrEqual = GL_LEQUAL,
+            Greater = GL_GREATER,
+            NotEqual = GL_NOTEQUAL,
+            GreaterOrEqual = GL_GEQUAL,
+            Always = GL_ALWAYS
         };
 
         Texture() = default;
@@ -48,9 +64,11 @@ namespace Engine
 
         void Bind(unsigned int unit) const;
         void SetWrap(Wrap wrap);
+        void SetBorder(const Color& color);
+        void SetCompareMode(CompareMode mode);
+        void SetCompareFunction(CompareFunction function);
         void SetMinification(Minification minification);
         void SetMagnification(Magnification magnification);
-        void SetBorderColor(const Color& color);
         unsigned int GetWidth() const;
         unsigned int GetHeight() const;
 

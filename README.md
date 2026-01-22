@@ -166,7 +166,6 @@ The renderer expects these files at runtime — make sure the working directory 
 
 This project bundles several headers under `include/` to simplify setup:
 
-- GLM (math)
 - GLFW (windowing/input)
 - GLEW (OpenGL extension wrangler)
 - stb_image (image loading)

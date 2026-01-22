@@ -1,14 +1,17 @@
 #pragma once
-#include <type_traits>
+#include <concepts>
+#include <engine/core/world.hpp>
 
 namespace Engine
 {
     class System
     {
         public:
-            virtual void Update(float deltaTime) = 0;
+
+        virtual void Update(World& world, float deltaTime) = 0;
+
     };
 
     template <typename T>
-    concept SystemConcept = std::is_base_of_v<System, T>;
+    concept SystemConcept = std::derived_from<T, System>
 }

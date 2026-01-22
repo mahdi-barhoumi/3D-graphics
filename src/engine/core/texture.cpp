@@ -23,25 +23,8 @@ namespace Engine
         if (!texture) throw std::runtime_error("Could not create texture.");
         this->width = static_cast<GLsizei>(width);
         this->height = static_cast<GLsizei>(height);
-        switch (format)
-        {
-            case Format::RGB:
-                glTextureStorage2D(texture, 1, GL_RGB8, this->width, this->height);
-                this->format = GL_RGB8;
-            break;
-            case Format::RGBA:
-                glTextureStorage2D(texture, 1, GL_RGBA8, this->width, this->height);
-                this->format = GL_RGBA8;
-            break;
-            case Format::Depth:
-                glTextureStorage2D(texture, 1, GL_DEPTH_COMPONENT24, this->width, this->height);
-                this->format = GL_DEPTH_COMPONENT24;
-            break;
-            case Format::DepthStencil:
-                glTextureStorage2D(texture, 1, GL_DEPTH24_STENCIL8, this->width, this->height);
-                this->format = GL_DEPTH24_STENCIL8;
-            break;
-        }
+        this->format = static_cast<GLenum>(format);
+        glTextureStorage2D(texture, 1, this->format, this->width, this->height);
         glTextureParameteri(texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTextureParameteri(texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -53,25 +36,8 @@ namespace Engine
         if (!texture) throw std::runtime_error("Could not create texture.");
         this->width = static_cast<GLsizei>(width);
         this->height = static_cast<GLsizei>(height);
-        switch (format)
-        {
-            case Format::RGB:
-                glTextureStorage2D(texture, 1, GL_RGB8, this->width, this->height);
-                this->format = GL_RGB8;
-            break;
-            case Format::RGBA:
-                glTextureStorage2D(texture, 1, GL_RGBA8, this->width, this->height);
-                this->format = GL_RGBA8;
-            break;
-            case Format::Depth:
-                glTextureStorage2D(texture, 1, GL_DEPTH_COMPONENT24, this->width, this->height);
-                this->format = GL_DEPTH_COMPONENT24;
-            break;
-            case Format::DepthStencil:
-                glTextureStorage2D(texture, 1, GL_DEPTH24_STENCIL8, this->width, this->height);
-                this->format = GL_DEPTH24_STENCIL8;
-            break;
-        }
+        this->format = static_cast<GLenum>(format);
+        glTextureStorage2D(texture, 1, this->format, this->width, this->height);
         glTextureSubImage2D(texture, 0, 0, 0, this->width, this->height, GL_RGBA, GL_UNSIGNED_BYTE, colors.data());
         glTextureParameteri(texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTextureParameteri(texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -95,51 +61,18 @@ namespace Engine
     unsigned int Texture::GetHeight() const { return static_cast<unsigned int>(GetBackendHeight()); }
     void Texture::SetWrap(Wrap wrap)
     {
-        switch (wrap)
-        {
-            case Wrap::Repeat:
-                glTextureParameteri(GetBackendTexture(), GL_TEXTURE_WRAP_S, GL_REPEAT);
-                glTextureParameteri(GetBackendTexture(), GL_TEXTURE_WRAP_T, GL_REPEAT);
-            return;
-            case Wrap::ClampToEdge:
-                glTextureParameteri(GetBackendTexture(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTextureParameteri(GetBackendTexture(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            return;
-            case Wrap::ClampToBorder:
-                glTextureParameteri(GetBackendTexture(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-                glTextureParameteri(GetBackendTexture(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-            return;
-        }
+        glTextureParameteri(GetBackendTexture(), GL_TEXTURE_WRAP_S, static_cast<GLenum>(wrap));
+        glTextureParameteri(GetBackendTexture(), GL_TEXTURE_WRAP_T, static_cast<GLenum>(wrap));
     }
-    void Texture::SetMinification(Minification minification)
-    {
-        switch (minification)
-        {
-            case Minification::Nearest:
-                glTextureParameteri(GetBackendTexture(), GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            return;
-            case Minification::Linear:
-                glTextureParameteri(GetBackendTexture(), GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            return;
-        }
-    }
-    void Texture::SetMagnification(Magnification magnification)
-    {
-        switch (magnification)
-        {
-            case Magnification::Nearest:
-                glTextureParameteri(GetBackendTexture(), GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            return;
-            case Magnification::Linear:
-                glTextureParameteri(GetBackendTexture(), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            return;
-        }
-    }
-    void Texture::SetBorderColor(const Color& color)
+    void Texture::SetBorder(const Color& color)
     {
         const GLfloat value[4] = { color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f };
         glTextureParameterfv(GetBackendTexture(), GL_TEXTURE_BORDER_COLOR, value);
     }
+    void Texture::SetCompareMode(CompareMode mode) { glTextureParameteri(GetBackendTexture(), GL_TEXTURE_COMPARE_MODE, static_cast<GLenum>(mode)); }
+    void Texture::SetCompareFunction(CompareFunction function) { glTextureParameteri(GetBackendTexture(), GL_TEXTURE_COMPARE_FUNC, static_cast<GLenum>(function)); }
+    void Texture::SetMinification(Minification minification) { glTextureParameteri(GetBackendTexture(), GL_TEXTURE_MIN_FILTER, static_cast<GLenum>(minification)); }
+    void Texture::SetMagnification(Magnification magnification) { glTextureParameteri(GetBackendTexture(), GL_TEXTURE_MAG_FILTER, static_cast<GLenum>(magnification)); }
     void Texture::Bind(unsigned int unit) const
     {
         if (MaxTextureUnits <= unit) throw std::runtime_error("Tried to bind texture to non existant texture unit.");
