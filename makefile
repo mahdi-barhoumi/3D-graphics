@@ -41,9 +41,9 @@ RELEASE_RESOURCE_OBJ = $(RELEASE_OBJ_DIR)/resource.o
 RELEASE_OBJS = $(RELEASE_C_OBJS) $(RELEASE_CPP_OBJS) $(RELEASE_RESOURCE_OBJ)
 RELEASE_C_DEPS   = $(patsubst $(SRC_DIR)/%.c,$(RELEASE_DEP_DIR)/%.d,$(C_SRCS))
 RELEASE_CPP_DEPS = $(patsubst $(SRC_DIR)/%.cpp,$(RELEASE_DEP_DIR)/%.d,$(CPP_SRCS))
-RELEASE_CFLAGS   = $(BASE_CFLAGS) -O3
-RELEASE_CXXFLAGS = $(BASE_CXXFLAGS) -O3
-RELEASE_LDFLAGS  = $(BASE_LDFLAGS) -static -static-libgcc -static-libstdc++ -mwindows
+RELEASE_CFLAGS   = $(BASE_CFLAGS) -O3 -march=native
+RELEASE_CXXFLAGS = $(BASE_CXXFLAGS) -O3 -march=native
+RELEASE_LDFLAGS  = $(BASE_LDFLAGS) -flto -static -static-libgcc -static-libstdc++ #-mwindows
 RELEASE_TARGET   = Application
 
 .PHONY: debug release clean

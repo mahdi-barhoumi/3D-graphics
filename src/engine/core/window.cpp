@@ -141,9 +141,9 @@ namespace Engine
         mp_Window = glfwCreateWindow(m_Width, m_Height, m_Title.c_str(), nullptr, nullptr);
         if (!mp_Window) throw std::runtime_error("Could not create window.");
 
-        // glfwMakeContextCurrent(mp_Window);
-        // glfwSwapInterval(0);
-        // glfwMakeContextCurrent(s_MainWindow);
+        glfwMakeContextCurrent(mp_Window);
+        glfwSwapInterval(0);
+        glfwMakeContextCurrent(s_MainWindow);
 
         HWND hwnd = glfwGetWin32Window(mp_Window);
         HICON hAppIcon = (HICON) LoadImage(GetModuleHandle(NULL), "MAINICON", IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);

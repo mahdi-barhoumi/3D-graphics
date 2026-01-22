@@ -90,17 +90,26 @@ int main(void)
 
     float deltaTime;
     auto now = chrono::high_resolution_clock::now();
+    auto startTime = now;
     
+    size_t frames = 0;
     while (!window.ShouldClose())
     {
         window.ProcessEvents();
         deltaTime = chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now() - now).count() * 1e-9;
         now = chrono::high_resolution_clock::now();
-        window.SetTitle(format("FPS: {:.2f}", 1 / deltaTime));
+        window.SetTitle(format("FPS: {:.2f}", 1.0f / deltaTime));
         input.Control(world, window, deltaTime);
         solver.Solve(world, deltaTime);
         renderer.Render(world, window);
+
+        ++frames;
     }
+
+    auto totalTime = chrono::duration_cast<chrono::nanoseconds>(now - startTime).count() * 1e-9;
+    float averageFPS = frames / totalTime;
+
+    cout << format("Average FPS: {:.2f}\n", averageFPS);
 
     return 0;
 }
