@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <algorithm>
-#include <glm/glm.hpp>
+#include <engine/core/math.hpp>
 
 namespace Engine
 {
@@ -11,14 +11,14 @@ namespace Engine
 
         constexpr Color() = default;
         constexpr Color(float intensity)
-            : r(static_cast<unsigned char>(std::clamp(intensity, 0.0f, 1.0f) * 255.0f))
-            , g(static_cast<unsigned char>(std::clamp(intensity, 0.0f, 1.0f) * 255.0f))
-            , b(static_cast<unsigned char>(std::clamp(intensity, 0.0f, 1.0f) * 255.0f)) {}
+            : r(static_cast<unsigned char>(Clamp(intensity, 0.0f, 1.0f) * 255.0f))
+            , g(static_cast<unsigned char>(Clamp(intensity, 0.0f, 1.0f) * 255.0f))
+            , b(static_cast<unsigned char>(Clamp(intensity, 0.0f, 1.0f) * 255.0f)) {}
         constexpr Color(float r, float g, float b, float a = 1.0f) 
-            : r(static_cast<unsigned char>(std::clamp(r, 0.0f, 1.0f) * 255.0f))
-            , g(static_cast<unsigned char>(std::clamp(g, 0.0f, 1.0f) * 255.0f))
-            , b(static_cast<unsigned char>(std::clamp(b, 0.0f, 1.0f) * 255.0f))
-            , a(static_cast<unsigned char>(std::clamp(a, 0.0f, 1.0f) * 255.0f)) {}
+            : r(static_cast<unsigned char>(Clamp(r, 0.0f, 1.0f) * 255.0f))
+            , g(static_cast<unsigned char>(Clamp(g, 0.0f, 1.0f) * 255.0f))
+            , b(static_cast<unsigned char>(Clamp(b, 0.0f, 1.0f) * 255.0f))
+            , a(static_cast<unsigned char>(Clamp(a, 0.0f, 1.0f) * 255.0f)) {}
         constexpr Color(unsigned char intensity) : r(intensity), g(intensity), b(intensity) {}
         constexpr Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255) : r(r), g(g), b(b), a(a) {}
         constexpr Color(std::string_view hex)
@@ -55,18 +55,18 @@ namespace Engine
                 a = value & 0xFF;
             }
         }
-        constexpr Color(glm::vec3 color)
-            : r(static_cast<unsigned char>(std::clamp(color.r, 0.0f, 1.0f) * 255.0f))
-            , g(static_cast<unsigned char>(std::clamp(color.g, 0.0f, 1.0f) * 255.0f))
-            , b(static_cast<unsigned char>(std::clamp(color.b, 0.0f, 1.0f) * 255.0f)) {}
-        constexpr Color(glm::vec4 color)
-            : r(static_cast<unsigned char>(std::clamp(color.r, 0.0f, 1.0f) * 255.0f))
-            , g(static_cast<unsigned char>(std::clamp(color.g, 0.0f, 1.0f) * 255.0f))
-            , b(static_cast<unsigned char>(std::clamp(color.b, 0.0f, 1.0f) * 255.0f))
-            , a(static_cast<unsigned char>(std::clamp(color.a, 0.0f, 1.0f) * 255.0f)) {}
+        constexpr Color(Vector3 color)
+            : r(static_cast<unsigned char>(Clamp(color.x, 0.0f, 1.0f) * 255.0f))
+            , g(static_cast<unsigned char>(Clamp(color.y, 0.0f, 1.0f) * 255.0f))
+            , b(static_cast<unsigned char>(Clamp(color.z, 0.0f, 1.0f) * 255.0f)) {}
+        constexpr Color(Vector4 color)
+            : r(static_cast<unsigned char>(Clamp(color.x, 0.0f, 1.0f) * 255.0f))
+            , g(static_cast<unsigned char>(Clamp(color.y, 0.0f, 1.0f) * 255.0f))
+            , b(static_cast<unsigned char>(Clamp(color.z, 0.0f, 1.0f) * 255.0f))
+            , a(static_cast<unsigned char>(Clamp(color.w, 0.0f, 1.0f) * 255.0f)) {}
         
-        operator glm::vec3() const { return glm::vec3(r / 255.0f, g / 255.0f, b / 255.0f); }
-        operator glm::vec4() const { return glm::vec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f); }
+        operator Vector3() const { return Vector3(r / 255.0f, g / 255.0f, b / 255.0f); }
+        operator Vector4() const { return Vector4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f); }
 
         static const Color Red;
         static const Color Green;

@@ -1,5 +1,5 @@
 #pragma once
-#include <glm/glm.hpp>
+#include <engine/core/math.hpp>
 #include <engine/core/component.hpp>
 
 namespace Engine
@@ -8,33 +8,33 @@ namespace Engine
     {
         public:
 
-        glm::vec3 m_Scale = glm::vec3(1);
-        glm::vec3 m_Position = glm::vec3(0);
-        glm::quat m_Orientation = glm::quat(glm::vec3(0));
+        Vector3 m_Scale = Vector3(1.0f);
+        Vector3 m_Position = Vector3(0.0f);
+        Quaternion m_Orientation = Quaternion(0.0f, 0.0f, 0.0f);
 
         public:
 
-        glm::vec3 GetScale() const;
-        glm::vec3 GetPosition() const;
-        glm::quat GetOrientation() const;
-        glm::quat GetInverseOrientation() const;
-        glm::mat4 GetScalingMatrix() const;
-        glm::mat4 GetInverseScalingMatrix() const;
-        glm::mat4 GetRotationMatrix() const;
-        glm::mat4 GetInverseRotationMatrix() const;
-        glm::mat4 GetTranslationMatrix() const;
-        glm::mat4 GetInverseTranslationMatrix() const;
-        glm::mat4 GetWorldMatrix() const;
-        glm::mat4 GetInverseWorldMatrix() const;
-        void RotateAround(glm::vec3 vector, float degrees);
+        Vector3 GetScale() const;
+        Vector3 GetPosition() const;
+        Quaternion GetOrientation() const;
+        Quaternion GetInverseOrientation() const;
+        Matrix4 GetScalingMatrix() const;
+        Matrix4 GetInverseScalingMatrix() const;
+        Matrix4 GetRotationMatrix() const;
+        Matrix4 GetInverseRotationMatrix() const;
+        Matrix4 GetTranslationMatrix() const;
+        Matrix4 GetInverseTranslationMatrix() const;
+        Matrix4 GetWorldMatrix() const;
+        Matrix4 GetInverseWorldMatrix() const;
+        void RotateAround(const Vector3& vector, float degrees);
         void RotateTo(float angleAroundX, float angleAroundY, float angleAroundZ);
         void RotateBy(float deltaAngleAroundX, float deltaAngleAroundY, float deltaAngleAroundZ);
         void ScaleTo(float scaleX, float scaleY, float scaleZ);
         void ScaleBy(float scalarX, float scalarY, float scalarZ);
         void TranslateTo(float x, float y, float z);
         void TranslateBy(float deltaX, float deltaY, float deltaZ);
-        void TranslateTo(glm::vec3 position);
-        void TranslateBy(glm::vec3 delta);
+        void TranslateTo(const Vector3& position);
+        void TranslateBy(const Vector3& delta);
 
     };
 }

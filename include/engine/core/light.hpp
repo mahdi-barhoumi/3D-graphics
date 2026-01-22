@@ -1,5 +1,5 @@
 #pragma once
-#include <glm/glm.hpp>
+#include <engine/core/math.hpp>
 #include <engine/core/color.hpp>
 #include <engine/core/transform.hpp>
 #include <engine/core/component.hpp>
@@ -21,9 +21,10 @@ namespace Engine
         Light(const Light& other) = default;
         ~Light() = default;
 
-        glm::mat4 GetProjectionMatrix() const;
-        glm::vec3 GetDirection(const Transform& transform) const;
-        glm::vec3 GetColor() const;
+        Matrix4 GetProjectionMatrix() const;
+        Vector3 GetLocalDirection() const;
+        Vector3 GetWorldDirection(const Transform& transform) const;
+        Vector3 GetColor() const;
 
     };
 }

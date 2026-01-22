@@ -3,9 +3,8 @@
 #include <cassert>
 #include <numbers>
 #include <algorithm>
-#include <immintrin.h>
 
-namespace Engine::Math
+namespace Engine
 {
     // Constants
 
@@ -39,19 +38,19 @@ namespace Engine::Math
 
     // Forward declarations
 
-    struct alignas(8)  Vector2;
-    struct alignas(16) Vector3;
-    struct alignas(16) Vector4;
-    struct alignas(16) Matrix2;
-    struct alignas(64) Matrix3;
-    struct alignas(64) Matrix4;
-    struct alignas(16) Quaternion;
+    struct Vector2;
+    struct Vector3;
+    struct Vector4;
+    struct Matrix2;
+    struct Matrix3;
+    struct Matrix4;
+    struct Quaternion;
 
     // Declarations
 
     // Vector2
 
-    struct alignas(8) Vector2
+    struct Vector2
     {
         union
         {
@@ -98,11 +97,10 @@ namespace Engine::Math
 
     // Vector3
 
-    struct alignas(16) Vector3
+    struct Vector3
     {
         union
         {
-            __m128 internal;
             float data[3];
             struct { float x, y, z; };
         };
@@ -114,7 +112,6 @@ namespace Engine::Math
         inline constexpr Vector3& operator=(Vector3&& other) noexcept = default;
         inline constexpr ~Vector3() noexcept = default;
 
-        inline constexpr explicit Vector3(__m128 internal) noexcept;
         inline constexpr explicit Vector3(float scalar) noexcept;
         inline constexpr explicit Vector3(float x, float y, float z) noexcept;
         inline constexpr explicit Vector3(const Vector2& xy, float z) noexcept;
@@ -154,11 +151,10 @@ namespace Engine::Math
 
     // Vector4
 
-    struct alignas(16) Vector4
+    struct Vector4
     {
         union
         {
-            __m128 internal;
             float data[4];
             struct { float x, y, z, w; };
         };
@@ -170,7 +166,6 @@ namespace Engine::Math
         inline constexpr Vector4& operator=(Vector4&& other) noexcept = default;
         inline constexpr ~Vector4() noexcept = default;
 
-        inline constexpr explicit Vector4(__m128 internal) noexcept;
         inline constexpr explicit Vector4(float scalar) noexcept;
         inline constexpr explicit Vector4(float x, float y, float z, float w) noexcept;
         inline constexpr explicit Vector4(const Vector2& xy, float z, float w) noexcept;
@@ -212,7 +207,7 @@ namespace Engine::Math
 
     // Matrix2
 
-    struct alignas(16) Matrix2
+    struct Matrix2
     {
         union
         {
@@ -258,7 +253,7 @@ namespace Engine::Math
 
     // Matrix3
 
-    struct alignas(64) Matrix3
+    struct Matrix3
     {
         union
         {
@@ -278,6 +273,8 @@ namespace Engine::Math
         inline constexpr explicit Matrix3(const Vector3& diagonal) noexcept;
         inline constexpr explicit Matrix3(const Vector3& column1, const Vector3& column2, const Vector3& column3) noexcept;
         inline constexpr explicit Matrix3(const Quaternion& quaternion) noexcept;
+
+        inline constexpr operator Matrix2() const noexcept;
 
         inline constexpr const Vector3& operator[](size_t index) const noexcept;
         inline constexpr Vector3& operator[](size_t index) noexcept;
@@ -305,7 +302,7 @@ namespace Engine::Math
 
     // Matrix4
 
-    struct alignas(64) Matrix4
+    struct Matrix4
     {
         union
         {
@@ -325,6 +322,9 @@ namespace Engine::Math
         inline constexpr explicit Matrix4(const Vector4& diagonal) noexcept;
         inline constexpr explicit Matrix4(const Vector4& column1, const Vector4& column2, const Vector4& column3, const Vector4& column4) noexcept;
         inline constexpr explicit Matrix4(const Quaternion& quaternion) noexcept;
+
+        inline constexpr operator Matrix2() const noexcept;
+        inline constexpr operator Matrix3() const noexcept;
 
         inline constexpr const Vector4& operator[](size_t index) const noexcept;
         inline constexpr Vector4& operator[](size_t index) noexcept;
@@ -352,13 +352,9 @@ namespace Engine::Math
 
     // Quaternion
 
-    struct alignas(16) Quaternion
+    struct Quaternion
     {
-        union
-        {
-            __m128 internal;
-            struct { float a, b, c, d; };
-        };
+        float a, b, c, d;
 
         inline constexpr Quaternion() noexcept = default;
         inline constexpr Quaternion(const Quaternion& other) noexcept = default;
@@ -367,7 +363,6 @@ namespace Engine::Math
         inline constexpr Quaternion& operator=(Quaternion&& other) noexcept = default;
         inline constexpr ~Quaternion() noexcept = default;
 
-        inline constexpr explicit Quaternion(__m128 internal) noexcept;
         inline constexpr explicit Quaternion(float alpha, float beta, float gamma) noexcept;
         inline constexpr explicit Quaternion(float a, float b, float c, float d) noexcept;
         inline constexpr explicit Quaternion(const Vector3& axis, float angle) noexcept;
@@ -473,9 +468,8 @@ namespace Engine::Math
 
     // Vector3
 
-    inline constexpr Vector3::Vector3(__m128 internal) noexcept : internal(internal) {}
-    inline constexpr Vector3::Vector3(float scalar) noexcept : internal(_mm_set1_ps(scalar)) {}
-    inline constexpr Vector3::Vector3(float x, float y, float z) noexcept : internal(_mm_setr_ps(x, y, z, 0.0f)) {}
+    inline constexpr Vector3::Vector3(float scalar) noexcept : x(scalar), y(scalar), z(scalar) {}
+    inline constexpr Vector3::Vector3(float x, float y, float z) noexcept : x(x), y(y), z(z) {}
     inline constexpr Vector3::Vector3(const Vector2& xy, float z) noexcept : x(xy.x), y(xy.y), z(z) {}
     inline constexpr Vector3::Vector3(float x, const Vector2& yz) noexcept : x(x), y(yz.x), z(yz.y) {}
 
@@ -493,30 +487,38 @@ namespace Engine::Math
     }
     inline constexpr Vector3& Vector3::operator+=(const Vector3& vector) noexcept
     {
-        internal = _mm_add_ps(internal, vector.internal);
+        x += vector.x;
+        y += vector.y;
+        z += vector.z;
         return *this;
     }
     inline constexpr Vector3& Vector3::operator-=(const Vector3& vector) noexcept
     {
-        internal = _mm_sub_ps(internal, vector.internal);
+        x -= vector.x;
+        y -= vector.y;
+        z -= vector.z;
         return *this;
     }
     inline constexpr Vector3& Vector3::operator*=(float scalar) noexcept
     {
-        internal = _mm_mul_ps(internal, _mm_set1_ps(scalar));
+        x *= scalar;
+        y *= scalar;
+        z *= scalar;
         return *this;
     }
     inline constexpr Vector3& Vector3::operator*=(const Matrix3& matrix) noexcept { return *this = *this * matrix; }
     inline constexpr Vector3& Vector3::operator/=(float scalar) noexcept
     {
-        internal = _mm_div_ps(internal, _mm_set1_ps(scalar));
+        x /= scalar;
+        y /= scalar;
+        z /= scalar;
         return *this;
     }
 
-    inline constexpr Vector3 operator+(const Vector3& u, const Vector3& v) noexcept { return Vector3(_mm_add_ps(u.internal, v.internal)); }
-    inline constexpr Vector3 operator-(const Vector3& u, const Vector3& v) noexcept { return Vector3(_mm_sub_ps(u.internal, v.internal)); }
-    inline constexpr Vector3 operator-(const Vector3& vector) noexcept { return Vector3(_mm_xor_ps(vector.internal, _mm_set1_ps(-0.0f))); }
-    inline constexpr Vector3 operator*(const Vector3& vector, float scalar) noexcept { return Vector3(_mm_mul_ps(vector.internal, _mm_set1_ps(scalar))); }
+    inline constexpr Vector3 operator+(const Vector3& u, const Vector3& v) noexcept { return Vector3(u.x + v.x, u.y + v.y, u.z + v.z); }
+    inline constexpr Vector3 operator-(const Vector3& u, const Vector3& v) noexcept { return Vector3(u.x - v.x, u.y - v.y, u.z - v.z); }
+    inline constexpr Vector3 operator-(const Vector3& vector) noexcept { return Vector3(-vector.x, -vector.y, -vector.z); }
+    inline constexpr Vector3 operator*(const Vector3& vector, float scalar) noexcept { return Vector3(vector.x * scalar, vector.y * scalar, vector.z * scalar); }
     inline constexpr Vector3 operator*(float scalar, const Vector3& vector) noexcept { return vector * scalar; }
     inline constexpr Vector3 operator*(const Matrix3& matrix, const Vector3& vector) noexcept
     {
@@ -530,14 +532,14 @@ namespace Engine::Math
             Dot(vector, matrix.columns[2])
         );
     }
-    inline constexpr Vector3 operator/(const Vector3& vector, float scalar) noexcept { return Vector3(_mm_div_ps(vector.internal, _mm_set1_ps(scalar))); }
+    inline constexpr Vector3 operator/(const Vector3& vector, float scalar) noexcept { return Vector3(vector.x / scalar, vector.y / scalar, vector.z / scalar); }
 
     inline constexpr float Dot(const Vector3& u, const Vector3& v) noexcept { return u.x * v.x + u.y * v.y + u.z * v.z; }
     inline constexpr float Length(const Vector3& vector) noexcept { return SquareRoot(Dot(vector, vector)); }
     inline constexpr float LengthSquared(const Vector3& vector) noexcept { return Dot(vector, vector); }
     inline constexpr float Distance(const Vector3& a, const Vector3& b) noexcept { return Length(a - b); }
     inline constexpr float DistanceSquared(const Vector3& a, const Vector3& b) noexcept { return LengthSquared(a - b); }
-    inline constexpr Vector3 Hadamard(const Vector3& u, const Vector3& v) noexcept { return Vector3(_mm_mul_ps(u.internal, v.internal)); }
+    inline constexpr Vector3 Hadamard(const Vector3& u, const Vector3& v) noexcept { return Vector3(u.x * v.x, u.y * v.y, u.z * v.z); }
     inline constexpr Vector3 Cross(const Vector3& u, const Vector3& v) noexcept { return Vector3(u.y * v.z - u.z * v.y, u.z * v.x - u.x * v.z, u.x * v.y - u.y * v.x); }
     inline constexpr Vector3 Normalized(const Vector3& vector) noexcept { return vector / Length(vector); }
     inline constexpr Vector3& Normalize(Vector3& vector) noexcept { return vector /= Length(vector); }
@@ -558,9 +560,8 @@ namespace Engine::Math
 
     // Vector4
 
-    inline constexpr Vector4::Vector4(__m128 internal) noexcept : internal(internal) {}
-    inline constexpr Vector4::Vector4(float scalar) noexcept : internal(_mm_set1_ps(scalar)) {}
-    inline constexpr Vector4::Vector4(float x, float y, float z, float w) noexcept : internal(_mm_setr_ps(x, y, z, w)) {}
+    inline constexpr Vector4::Vector4(float scalar) noexcept : x(scalar), y(scalar), z(scalar), w(scalar) {}
+    inline constexpr Vector4::Vector4(float x, float y, float z, float w) noexcept : x(x), y(y), z(z), w(w) {}
     inline constexpr Vector4::Vector4(const Vector2& xy, float z, float w) noexcept : x(xy.x), y(xy.y), z(z), w(w) {}
     inline constexpr Vector4::Vector4(float x, const Vector2& yz, float w) noexcept : x(x), y(yz.x), z(yz.y), w(w) {}
     inline constexpr Vector4::Vector4(float x, float y, const Vector2& zw) noexcept : x(x), y(y), z(zw.x), w(zw.y) {}
@@ -569,7 +570,7 @@ namespace Engine::Math
     inline constexpr Vector4::Vector4(float x, const Vector3& yzw) noexcept : x(x), y(yzw.x), z(yzw.y), w(yzw.z) {}
 
     inline constexpr Vector4::operator Vector2() const noexcept { return Vector2(x, y); }
-    inline constexpr Vector4::operator Vector3() const noexcept { return Vector3(internal); }
+    inline constexpr Vector4::operator Vector3() const noexcept { return Vector3(x, y, z); }
 
     inline constexpr float Vector4::operator[](size_t index) const noexcept
     {
@@ -583,30 +584,42 @@ namespace Engine::Math
     }
     inline constexpr Vector4& Vector4::operator+=(const Vector4& vector) noexcept
     {
-        internal = _mm_add_ps(internal, vector.internal);
+        x += vector.x;
+        y += vector.y;
+        z += vector.z;
+        w += vector.w;
         return *this;
     }
     inline constexpr Vector4& Vector4::operator-=(const Vector4& vector) noexcept
     {
-        internal = _mm_sub_ps(internal, vector.internal);
+        x -= vector.x;
+        y -= vector.y;
+        z -= vector.z;
+        w -= vector.w;
         return *this;
     }
     inline constexpr Vector4& Vector4::operator*=(float scalar) noexcept
     {
-        internal = _mm_mul_ps(internal, _mm_set1_ps(scalar));
+        x *= scalar;
+        y *= scalar;
+        z *= scalar;
+        w *= scalar;
         return *this;
     }
     inline constexpr Vector4& Vector4::operator*=(const Matrix4& matrix) noexcept { return *this = *this * matrix; }
     inline constexpr Vector4& Vector4::operator/=(float scalar) noexcept
     {
-        internal = _mm_div_ps(internal, _mm_set1_ps(scalar));
+        x /= scalar;
+        y /= scalar;
+        z /= scalar;
+        w /= scalar;
         return *this;
     }
 
-    inline constexpr Vector4 operator+(const Vector4& u, const Vector4& v) noexcept { return Vector4(_mm_add_ps(u.internal, v.internal)); }
-    inline constexpr Vector4 operator-(const Vector4& u, const Vector4& v) noexcept { return Vector4(_mm_sub_ps(u.internal, v.internal)); }
-    inline constexpr Vector4 operator-(const Vector4& vector) noexcept { return Vector4(_mm_xor_ps(vector.internal, _mm_set1_ps(-0.0f))); }
-    inline constexpr Vector4 operator*(const Vector4& vector, float scalar) noexcept { return Vector4(_mm_mul_ps(vector.internal, _mm_set1_ps(scalar))); }
+    inline constexpr Vector4 operator+(const Vector4& u, const Vector4& v) noexcept { return Vector4(u.x + v.x, u.y + v.y, u.z + v.z, u.w + v.w); }
+    inline constexpr Vector4 operator-(const Vector4& u, const Vector4& v) noexcept { return Vector4(u.x - v.x, u.y - v.y, u.z - v.z, u.w - v.w); }
+    inline constexpr Vector4 operator-(const Vector4& vector) noexcept { return Vector4(-vector.x, -vector.y, -vector.z, -vector.w); }
+    inline constexpr Vector4 operator*(const Vector4& vector, float scalar) noexcept { return Vector4(vector.x * scalar, vector.y * scalar, vector.z * scalar, vector.w * scalar); }
     inline constexpr Vector4 operator*(float scalar, const Vector4& vector) noexcept { return vector * scalar; }
     inline constexpr Vector4 operator*(const Matrix4& matrix, const Vector4& vector) noexcept
     {
@@ -621,14 +634,14 @@ namespace Engine::Math
             Dot(vector, matrix.columns[3])
         );
     }
-    inline constexpr Vector4 operator/(const Vector4& vector, float scalar) noexcept { return Vector4(_mm_div_ps(vector.internal, _mm_set1_ps(scalar))); }
+    inline constexpr Vector4 operator/(const Vector4& vector, float scalar) noexcept { return Vector4(vector.x / scalar, vector.y / scalar, vector.z / scalar, vector.w / scalar); }
 
     inline constexpr float Dot(const Vector4& u, const Vector4& v) noexcept { return u.x * v.x + u.y * v.y + u.z * v.z + u.w * v.w; }
     inline constexpr float Length(const Vector4& vector) noexcept { return SquareRoot(Dot(vector, vector)); }
     inline constexpr float LengthSquared(const Vector4& vector) noexcept { return Dot(vector, vector); }
     inline constexpr float Distance(const Vector4& a, const Vector4& b) noexcept { return Length(a - b); }
     inline constexpr float DistanceSquared(const Vector4& a, const Vector4& b) noexcept { return LengthSquared(a - b); }
-    inline constexpr Vector4 Hadamard(const Vector4& u, const Vector4& v) noexcept { return Vector4(_mm_mul_ps(u.internal, v.internal)); }
+    inline constexpr Vector4 Hadamard(const Vector4& u, const Vector4& v) noexcept { return Vector4(u.x * v.x, u.y * v.y, u.z * v.z, u.w * v.w); }
     inline constexpr Vector4 Normalized(const Vector4& vector) noexcept { return vector / Length(vector); }
     inline constexpr Vector4& Normalize(Vector4& vector) noexcept { return vector /= Length(vector); }
 
@@ -844,6 +857,14 @@ namespace Engine::Math
         return *this;
     }
 
+    inline constexpr Matrix3::operator Matrix2() const noexcept
+    {
+        return Matrix2(
+            Vector2(columns[0]),
+            Vector2(columns[1])
+        );
+    }
+
     inline constexpr Matrix3 operator+(const Matrix3& a, const Matrix3& b) noexcept
     {
         return Matrix3(
@@ -986,6 +1007,22 @@ namespace Engine::Math
         columns[1] = Vector4(       2.0f * (bc - ad),    1.0f - 2.0f * (bb + dd),           2.0f * (cd + ab),                       0.0f);
         columns[2] = Vector4(       2.0f * (bd + ac),           2.0f * (cd - ab),    1.0f - 2.0f * (bb + cc),                       0.0f);
         columns[3] = Vector4(                   0.0f,                       0.0f,                       0.0f,                       1.0f);
+    }
+
+    inline constexpr Matrix4::operator Matrix2() const noexcept
+    {
+        return Matrix2(
+            Vector2(columns[0]),
+            Vector2(columns[1])
+        );
+    }
+    inline constexpr Matrix4::operator Matrix3() const noexcept
+    {
+        return Matrix3(
+            Vector3(columns[0]),
+            Vector3(columns[1]),
+            Vector3(columns[2])
+        );
     }
 
     inline constexpr const Vector4& Matrix4::operator[](size_t index) const noexcept
@@ -1197,7 +1234,6 @@ namespace Engine::Math
 
     // Quaternion
 
-    inline constexpr Quaternion::Quaternion(__m128 internal) noexcept : internal(internal) {}
     inline constexpr Quaternion::Quaternion(float alpha, float beta, float gamma) noexcept
     {
         Vector3 half(alpha, beta, gamma);
@@ -1210,7 +1246,7 @@ namespace Engine::Math
 		c = cos.x * sin.y * cos.z + sin.x * cos.y * sin.z;
 		d = cos.x * cos.y * sin.z - sin.x * sin.y * cos.z;
     }
-    inline constexpr Quaternion::Quaternion(float a, float b, float c, float d) noexcept : internal(_mm_setr_ps(a, b, c, d)) {}
+    inline constexpr Quaternion::Quaternion(float a, float b, float c, float d) noexcept : a(a), b(b), c(c), d(d) {}
     inline constexpr Quaternion::Quaternion(const Vector3& axis, float angle) noexcept
     {
         const float sin = Sin(angle * 0.5f);
@@ -1219,7 +1255,7 @@ namespace Engine::Math
         c = axis.y * sin;
         d = axis.z * sin;
     }
-    inline constexpr Quaternion::Quaternion(const Vector4& vector) noexcept : internal(vector.internal) {}
+    inline constexpr Quaternion::Quaternion(const Vector4& vector) noexcept : a(vector.x), b(vector.y), c(vector.z), d(vector.w) {}
 
     inline constexpr Quaternion::operator Matrix3() const noexcept
     {
@@ -1261,30 +1297,42 @@ namespace Engine::Math
 
     inline constexpr Quaternion& Quaternion::operator+=(const Quaternion& quaternion) noexcept
     {
-        internal = _mm_add_ps(internal, quaternion.internal);
+        a += quaternion.a;
+        b += quaternion.b;
+        c += quaternion.c;
+        d += quaternion.d;
         return *this;
     }
     inline constexpr Quaternion& Quaternion::operator-=(const Quaternion& quaternion) noexcept
     {
-        internal = _mm_sub_ps(internal, quaternion.internal);
+        a -= quaternion.a;
+        b -= quaternion.b;
+        c -= quaternion.c;
+        d -= quaternion.d;
         return *this;
     }
     inline constexpr Quaternion& Quaternion::operator*=(float scalar) noexcept
     {
-        internal = _mm_mul_ps(internal, _mm_set1_ps(scalar));
+        a *= scalar;
+        b *= scalar;
+        c *= scalar;
+        d *= scalar;
         return *this;
     }
     inline constexpr Quaternion& Quaternion::operator*=(const Quaternion& quaternion) noexcept { return *this = *this * quaternion; }
     inline constexpr Quaternion& Quaternion::operator/=(float scalar) noexcept
     {
-        internal = _mm_div_ps(internal, _mm_set1_ps(scalar));
+        a /= scalar;
+        b /= scalar;
+        c /= scalar;
+        d /= scalar;
         return *this;
     }
 
-    inline constexpr Quaternion operator+(const Quaternion& p, const Quaternion& q) noexcept { return Quaternion(_mm_add_ps(p.internal, q.internal)); }
-    inline constexpr Quaternion operator-(const Quaternion& p, const Quaternion& q) noexcept { return Quaternion(_mm_sub_ps(p.internal, q.internal)); }
-    inline constexpr Quaternion operator-(const Quaternion& quaternion) noexcept { return Quaternion(_mm_xor_ps(quaternion.internal, _mm_set1_ps(-0.0f))); }
-    inline constexpr Quaternion operator*(const Quaternion& quaternion, float scalar) noexcept { return Quaternion(_mm_mul_ps(quaternion.internal, _mm_set1_ps(scalar))); }
+    inline constexpr Quaternion operator+(const Quaternion& p, const Quaternion& q) noexcept { return Quaternion(p.a + q.a, p.b + q.b, p.c + q.c, p.d + q.d); }
+    inline constexpr Quaternion operator-(const Quaternion& p, const Quaternion& q) noexcept { return Quaternion(p.a - q.a, p.b - q.b, p.c - q.c, p.d - q.d); }
+    inline constexpr Quaternion operator-(const Quaternion& quaternion) noexcept { return Quaternion(-quaternion.a, -quaternion.b, -quaternion.c, -quaternion.d); }
+    inline constexpr Quaternion operator*(const Quaternion& quaternion, float scalar) noexcept { return Quaternion(quaternion.a * scalar, quaternion.b * scalar, quaternion.c * scalar, quaternion.d * scalar); }
     inline constexpr Quaternion operator*(float scalar, const Quaternion& quaternion) noexcept { return quaternion * scalar; }
     inline constexpr Quaternion operator*(const Quaternion& p, const Quaternion& q) noexcept
     {
@@ -1295,15 +1343,17 @@ namespace Engine::Math
             p.a * q.d + p.d * q.a + p.b * q.c - p.c * q.b
 		);
 	}
-    inline constexpr Quaternion operator/(const Quaternion& quaternion, float scalar) noexcept { return Quaternion(_mm_div_ps(quaternion.internal, _mm_set1_ps(scalar))); }
+    inline constexpr Quaternion operator/(const Quaternion& quaternion, float scalar) noexcept { return Quaternion(quaternion.a / scalar, quaternion.b / scalar, quaternion.c / scalar, quaternion.d / scalar); }
 
     inline constexpr float Dot(const Quaternion& p, const Quaternion& q) noexcept { return p.a * q.a + p.b * q.b + p.c * q.c + p.d * q.d; }
     inline constexpr float Length(const Quaternion& quaternion) noexcept { return SquareRoot(Dot(quaternion, quaternion)); }
     inline constexpr float LengthSquared(const Quaternion& quaternion) noexcept { return Dot(quaternion, quaternion); }
-    inline constexpr Quaternion Conjugated(const Quaternion& quaternion) noexcept { return Quaternion(_mm_xor_ps(quaternion.internal, _mm_setr_ps(0.0f, -0.0f, -0.0f, -0.0f))); }
+    inline constexpr Quaternion Conjugated(const Quaternion& quaternion) noexcept { return Quaternion(quaternion.a, -quaternion.b, -quaternion.c, -quaternion.d); }
     inline constexpr Quaternion& Conjugate(Quaternion& quaternion) noexcept
     {
-        quaternion.internal = _mm_xor_ps(quaternion.internal, _mm_setr_ps(0.0f, -0.0f, -0.0f, -0.0f));
+        quaternion.b = -quaternion.b;
+        quaternion.c = -quaternion.c;
+        quaternion.d = -quaternion.d;
         return quaternion;
     }
     inline constexpr Quaternion Normalized(const Quaternion& quaternion) noexcept { return quaternion / Length(quaternion); }

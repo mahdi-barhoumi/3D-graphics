@@ -1,5 +1,5 @@
 #pragma once
-#include <glm/glm.hpp>
+#include <engine/core/math.hpp>
 #include <engine/core/component.hpp>
 
 namespace Engine
@@ -11,7 +11,7 @@ namespace Engine
         float m_Pan = 0.0f;
         float m_Tilt = 0.0f;
         float m_Roll = 0.0f;
-        float m_FOV = glm::radians(90.0f);
+        float m_FOV = Degrees(90.0f);
         float m_NearZ = 0.1f;
         float m_FarZ = 1000.0f;
 
@@ -36,13 +36,13 @@ namespace Engine
         float GetRoll();
         void SetRoll(float degrees);
         void Roll(float degrees);
-        glm::vec3 GetLocalUp() const;
-        glm::vec3 GetLocalRight() const;
-        glm::vec3 GetLocalForward() const;
-        glm::vec3 GetWorldUp(const glm::quat& orientation) const;
-        glm::vec3 GetWorldRight(const glm::quat& orientation) const;
-        glm::vec3 GetWorldForward(const glm::quat& orientation) const;
-        glm::mat4 GetProjectionMatrix(float aspectRatio) const;
+        Vector3 GetLocalUp() const;
+        Vector3 GetLocalRight() const;
+        Vector3 GetLocalForward() const;
+        Vector3 GetWorldUp(const Quaternion& orientation) const;
+        Vector3 GetWorldRight(const Quaternion& orientation) const;
+        Vector3 GetWorldForward(const Quaternion& orientation) const;
+        Matrix4 GetProjectionMatrix(float aspectRatio) const;
 
     };
 }

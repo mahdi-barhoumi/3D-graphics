@@ -1,37 +1,37 @@
 #pragma once
-#include <glm/glm.hpp>
+#include <engine/core/math.hpp>
 
 namespace Engine
 {
     struct VertexP3
     {
-        glm::vec3 position = glm::vec3(0);
+        Vector3 position = Vector3(0.0f);
     };
     struct VertexP3C4
     {
-        glm::vec3 position = glm::vec3(0);
-        glm::vec4 color = glm::vec4(0);
+        Vector3 position = Vector3(0.0f);
+        Vector4 color = Vector4(0.0f);
     };
     struct VertexP3N3
     {
-        glm::vec3 position = glm::vec3(0);
-        glm::vec3 normal = glm::vec3(0);
+        Vector3 position = Vector3(0.0f);
+        Vector3 normal = Vector3(0.0f);
     };
     struct VertexP3N3C4
     {
-        glm::vec3 position = glm::vec3(0);
-        glm::vec3 normal = glm::vec3(0);
-        glm::vec4 color = glm::vec4(0);
+        Vector3 position = Vector3(0.0f);
+        Vector3 normal = Vector3(0.0f);
+        Vector4 color = Vector4(0.0f);
     };
     struct VertexP3T2
     {
-        glm::vec3 position = glm::vec3(0);
-        glm::vec2 textureCoordinate = glm::vec2(0);
+        Vector3 position = Vector3(0.0f);
+        Vector2 textureCoordinate = Vector2(0.0f);
     };
     struct VertexP3T2N3
     {
-        glm::vec3 position = glm::vec3(0);
-        glm::vec2 textureCoordinate = glm::vec2(0);
-        glm::vec3 normal = glm::vec3(0);
+        Vector3 position = Vector3(0.0f);
+        Vector2 textureCoordinate = Vector2(0.0f);
+        Vector3 normal = Vector3(0.0f);
     };
 }

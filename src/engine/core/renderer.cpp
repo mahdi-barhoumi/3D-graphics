@@ -1,4 +1,3 @@
-#include <glm/glm.hpp>
 #include <glew/glew.hpp>
 #include <engine/core/mesh.hpp>
 #include <engine/core/object.hpp>
@@ -11,16 +10,16 @@ namespace Engine
     Renderer::Renderer()
     {
         std::vector<VertexP3C4> vertices;
-        vertices.push_back({ .position = glm::vec3(0.0f, 0.0f, 0.0f), .color = Color::Red });
-        vertices.push_back({ .position = glm::vec3(0.1f, 0.0f, 0.0f), .color = Color::Red });
-        vertices.push_back({ .position = glm::vec3(0.0f, 0.0f, 0.0f), .color = Color::Green });
-        vertices.push_back({ .position = glm::vec3(0.0f, 0.1f, 0.0f), .color = Color::Green });
-        vertices.push_back({ .position = glm::vec3(0.0f, 0.0f, 0.0f), .color = Color::Blue });
-        vertices.push_back({ .position = glm::vec3(0.0f, 0.0f, 0.1f), .color = Color::Blue });
+        vertices.push_back({ .position = Vector3(0.0f, 0.0f, 0.0f), .color = Color::Red });
+        vertices.push_back({ .position = Vector3(0.1f, 0.0f, 0.0f), .color = Color::Red });
+        vertices.push_back({ .position = Vector3(0.0f, 0.0f, 0.0f), .color = Color::Green });
+        vertices.push_back({ .position = Vector3(0.0f, 0.1f, 0.0f), .color = Color::Green });
+        vertices.push_back({ .position = Vector3(0.0f, 0.0f, 0.0f), .color = Color::Blue });
+        vertices.push_back({ .position = Vector3(0.0f, 0.0f, 0.1f), .color = Color::Blue });
         std::vector<unsigned int> indices {0, 1, 2, 3, 4, 5};
         m_AxisMesh = Mesh(vertices, indices, Mesh::Primitive::Lines);
 
-        m_LightTransform.RotateBy(glm::radians(15.0f), 0.0f, 0.0f);
+        m_LightTransform.RotateBy(Radians(15.0f), 0.0f, 0.0f);
 
         m_ShadowMap.SetWrap(Texture::Wrap::ClampToBorder);
         m_ShadowMap.SetBorder(1.0f);
@@ -38,7 +37,7 @@ namespace Engine
 
         window.MakeCurrent();
 
-        glm::mat4 vertexPositionTransformationMatrix;
+        Matrix4 vertexPositionTransformationMatrix;
         EnableFaceCulling();
         EnableDepthTesting();
         DepthTestFunction(DepthTest::Less);
@@ -47,7 +46,7 @@ namespace Engine
         m_ShadowFramebuffer.Bind();
         ClearDepth();
 
-        m_LightTransform.TranslateTo(cameraTransform.GetPosition() + glm::vec3(0.0f, 0.0f, 10.0f));
+        m_LightTransform.TranslateTo(cameraTransform.GetPosition() + Vector3(0.0f, 0.0f, 10.0f));
         for (auto [handle, transform, mesh, texture] : world.View<Transform, Mesh, Texture>())
         {
             vertexPositionTransformationMatrix = m_Light.GetProjectionMatrix() * m_LightTransform.GetInverseWorldMatrix() * transform.GetWorldMatrix();

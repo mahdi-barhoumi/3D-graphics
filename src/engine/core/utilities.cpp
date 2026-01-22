@@ -1,7 +1,6 @@
 #include <fstream>
 #include <filesystem>
 #include <unordered_map>
-#include <glm/glm.hpp>
 #include <stb/image.hpp>
 #include <engine/core/utilities.hpp>
 
@@ -21,9 +20,9 @@ namespace Engine::Utilities
         }
         
         std::string line;
-        std::vector<glm::vec3> positions;
-        std::vector<glm::vec2> textureCoordinates;
-        std::vector<glm::vec3> normals;
+        std::vector<Vector3> positions;
+        std::vector<Vector2> textureCoordinates;
+        std::vector<Vector3> normals;
         std::unordered_map<size_t, unsigned int> map;
 
         float x, y, z;
@@ -42,18 +41,18 @@ namespace Engine::Utilities
                 map[key] = vertices.size();
                 indices.push_back(vertices.size());
                 vertices.push_back({
-                    (v) ? positions[v - 1] : glm::vec3(0),
-                    (vt) ? textureCoordinates[vt - 1] : glm::vec2(0),
-                    (vn) ? normals[vn - 1] : glm::vec3(0),
+                    (v) ? positions[v - 1] : Vector3(0.0f),
+                    (vt) ? textureCoordinates[vt - 1] : Vector2(0.0f),
+                    (vn) ? normals[vn - 1] : Vector3(0.0f),
                 });
             }
         };
 
         while (getline(file, line))
         {
-            if (sscanf(line.c_str(), "v %f %f %f", &x, &y, &z) == 3) positions.push_back(glm::vec3(x, y, z));
-            else if (sscanf(line.c_str(), "vt %f %f", &x, &y) == 2) textureCoordinates.push_back(glm::vec2(x, y));
-            else if (sscanf(line.c_str(), "vn %f %f %f", &x, &y, &z) == 3) normals.push_back(glm::vec3(x, y, z));
+            if (sscanf(line.c_str(), "v %f %f %f", &x, &y, &z) == 3) positions.push_back(Vector3(x, y, z));
+            else if (sscanf(line.c_str(), "vt %f %f", &x, &y) == 2) textureCoordinates.push_back(Vector2(x, y));
+            else if (sscanf(line.c_str(), "vn %f %f %f", &x, &y, &z) == 3) normals.push_back(Vector3(x, y, z));
             else if (sscanf(line.c_str(), "f %zu/%zu/%zu %zu/%zu/%zu %zu/%zu/%zu", &v1, &vt1, &vn1, &v2, &vt2, &vn2, &v3, &vt3, &vn3) == 9)
             {
                 if (v1 > max || vt1 > max || vn1 > max || v2 > max || vt2 > max || vn2 > max || v3 > max || vt3 > max || vn3 > max)

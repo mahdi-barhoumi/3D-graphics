@@ -2,7 +2,6 @@
 #include <string>
 #include <chrono>
 #include <iostream>
-#include <glm/glm.hpp>
 #include <engine/core/mesh.hpp>
 #include <engine/core/world.hpp>
 #include <engine/core/input.hpp>
@@ -17,7 +16,6 @@
 #include <engine/core/collider.hpp>
 
 using namespace std;
-using namespace glm;
 
 using namespace Engine;
 
@@ -52,7 +50,7 @@ int main(void)
         Transform cubeTransform;
         cubeTransform.TranslateTo(5, 5, 20);
         cubeTransform.ScaleTo(2, 2, 2);
-        cubeTransform.RotateBy(glm::radians(40.0f), glm::radians(15.0f), 0);
+        cubeTransform.RotateBy(Radians(40.0f), Radians(15.0f), 0);
         cube.Add<Transform>(cubeTransform);
         cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
         cube.Add<Texture>(Texture("./assets/textures/dirt.png"));
