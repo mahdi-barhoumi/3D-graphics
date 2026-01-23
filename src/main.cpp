@@ -5,6 +5,7 @@
 #include <engine/core/mesh.hpp>
 #include <engine/core/world.hpp>
 #include <engine/core/input.hpp>
+#include <engine/core/audio.hpp>
 #include <engine/core/transform.hpp>
 #include <engine/core/window.hpp>
 #include <engine/core/object.hpp>
@@ -32,6 +33,7 @@ int main(void)
         Transform transform;
         camera.Add<Transform>(Vector3(0.0f, -10.0f, 5.0f));
         camera.Add<Camera>();
+        camera.Add<Audio>("./assets/sounds/explosion.ogg");
         world.SetActiveCamera(camera);
     }
 

@@ -1,5 +1,6 @@
 #include <engine/core/input.hpp>
 #include <engine/core/world.hpp>
+#include <engine/core/audio.hpp>
 #include <engine/core/camera.hpp>
 #include <engine/core/object.hpp>
 #include <engine/core/window.hpp>
@@ -18,6 +19,8 @@ namespace Engine
         {
             Camera& camera = cameraObject.Get<Camera>();
             Transform& cameraTransform = cameraObject.Get<Transform>();
+
+            if (cameraObject.Has<Audio>() && window.IsMouseButtonPressed(MouseButton::MouseLeft)) cameraObject.Get<Audio>().Play();
 
             Vector2 direction;
             Vector2 forward = camera.GetWorldForward(cameraTransform.GetOrientation());

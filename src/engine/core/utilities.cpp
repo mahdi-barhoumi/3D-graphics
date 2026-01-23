@@ -2,11 +2,12 @@
 #include <filesystem>
 #include <unordered_map>
 #include <stb/image.hpp>
+#include <stb/vorbis.hpp>
 #include <engine/core/utilities.hpp>
 
 namespace Engine::Utilities
 {
-    bool LoadOBJFile(std::string path, std::vector<VertexP3T2N3>& vertices, std::vector<unsigned int>& indices)
+    bool LoadOBJFile(const std::string& path, std::vector<VertexP3T2N3>& vertices, std::vector<unsigned int>& indices)
     {
         indices.clear();
         vertices.clear();
@@ -94,7 +95,7 @@ namespace Engine::Utilities
         file.close();
         return true;
     }
-    bool LoadImageFile(std::string path, unsigned int& width, unsigned int& height, std::vector<Color>& colors)
+    bool LoadImageFile(const std::string& path, unsigned int& width, unsigned int& height, std::vector<Color>& colors)
     {
         int imageWidth, imageHeight;
         unsigned char* data = stbi_load(path.c_str(), &imageWidth, &imageHeight, nullptr, STBI_rgb_alpha);
@@ -123,5 +124,19 @@ namespace Engine::Utilities
         stbi_image_free(data);
         return true;
     }
-    bool LoadWAVFile(std::string path /*, ... */) { return false; }
+    bool LoadOGGFile(const std::string& path, unsigned int& channels, unsigned int& rate, std::vector<short>& pcm)
+    {
+        std::filesystem::path filesystemPath(path);
+        if (filesystemPath.extension().string() != ".ogg") return false;
+
+        short* data;
+        int numChannels, sampleRate;
+        int numSamples = stb_vorbis_decode_filename(path.c_str(), &numChannels, &sampleRate, &data);
+        if (numSamples <= 0) return false;
+        channels = static_cast<unsigned int>(numChannels);
+        rate = static_cast<unsigned int>(sampleRate);
+        pcm = std::vector<short>(data, data + numSamples * numChannels);
+        free(data);
+        return true;
+    }
 }
