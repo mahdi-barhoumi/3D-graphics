@@ -1,3 +1,5 @@
+#include <set>
+#include <vector>
 #include <engine/core/solver.hpp>
 
 // #include <string>
@@ -17,8 +19,6 @@ namespace Engine
         support.point = support.pointFromA - support.pointFromB;
         return support;
     }
-    
-    bool Solver::SameDirection(const Vector3& u, const Vector3& v) { return Dot(u, v) > 0.0f; }
     Vector3 Solver::ConvertToBarycentric(const Vector3& point, const Vector3& a, const Vector3& b, const Vector3& c)
     {
         Vector3 V0 = b - a;
@@ -42,6 +42,7 @@ namespace Engine
         
         return Vector3(u, v, w);
     }
+    bool Solver::SameDirection(const Vector3& u, const Vector3& v) { return Dot(u, v) > 0.0f; }
 
     Solver::CollisionInfo Solver::GJK(const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB)
     {
@@ -181,15 +182,13 @@ namespace Engine
 
         return true;
     }
-    
     Solver::CollisionInfo Solver::EPA(const Simplex& simplex, const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB)
     {
         std::vector<Support> polytope;
         polytope.reserve(64);
         std::vector<Face> faces;
         faces.reserve(64);
-        std::vector<std::pair<size_t, size_t>> uniqueEdges;
-        uniqueEdges.reserve(64);
+        std::set<std::pair<size_t, size_t>> uniqueEdges;
 
         polytope.push_back(simplex.A);
         polytope.push_back(simplex.B);
@@ -257,9 +256,21 @@ namespace Engine
                 if (SameDirection(faces[index].normal, support.point - polytope[faces[index].a].point))
                 {
                     // Add unique edges only, if a reverse edge aleady exists then remove it (both triangles it belonged to are removed).
-                    AddUniqueEdge(uniqueEdges, faces[index].a, faces[index].b);
-                    AddUniqueEdge(uniqueEdges, faces[index].b, faces[index].c);
-                    AddUniqueEdge(uniqueEdges, faces[index].c, faces[index].a);
+                    size_t a = faces[index].a;
+                    size_t b = faces[index].b;
+                    size_t c = faces[index].c;
+
+                    auto reverse = std::find(uniqueEdges.begin(), uniqueEdges.end(), std::make_pair(b, a));
+                    if (reverse != uniqueEdges.end()) uniqueEdges.erase(reverse);
+                    else uniqueEdges.emplace(a, b);
+
+                    reverse = std::find(uniqueEdges.begin(), uniqueEdges.end(), std::make_pair(c, b));
+                    if (reverse != uniqueEdges.end()) uniqueEdges.erase(reverse);
+                    else uniqueEdges.emplace(b, c);
+
+                    reverse = std::find(uniqueEdges.begin(), uniqueEdges.end(), std::make_pair(a, c));
+                    if (reverse != uniqueEdges.end()) uniqueEdges.erase(reverse);
+                    else uniqueEdges.emplace(c, a);
 
                     // Remove the face.
                     faces[index] = faces.back();
@@ -276,12 +287,6 @@ namespace Engine
         CollisionInfo info;
         info.status = CollisionInfo::Status::EPAFailed;
         return info;
-    }
-    void Solver::AddUniqueEdge(std::vector<std::pair<size_t, size_t>>& edges, size_t a, size_t b)
-    {
-        auto reverse = std::find(edges.begin(), edges.end(), std::make_pair(b, a));
-        if (reverse != edges.end()) edges.erase(reverse);
-        else edges.emplace_back(a, b);
     }
 
     void Solver::ResolveCollision(Physics& physicsA, Transform& transformA, Physics& physicsB, Transform& transformB, const CollisionInfo& collision)
@@ -303,23 +308,19 @@ namespace Engine
         // Calculate angular effect on impulse (only for non-stationary objects).
         Vector3 inertiaA = Vector3(0.0f);
         Vector3 inertiaB = Vector3(0.0f);
-        Matrix3 inverseInertiaTensorWorldA = Matrix3(0.0f);
-        Matrix3 inverseInertiaTensorWorldB = Matrix3(0.0f);
+        Matrix3 worldInverseInertiaTensorA = Matrix3(0.0f);
+        Matrix3 worldInverseInertiaTensorB = Matrix3(0.0f);
         
         // TODO: This is wrong and bad (incorrect inertia scaling calculations).
         if (!physicsA.IsStationary())
         {
-            Matrix3 rotationMatrixA = Matrix3(transformA.GetRotationMatrix());
-            Matrix3 inverseScalingMatrixA = Matrix3(transformA.GetInverseScalingMatrix());
-            inverseInertiaTensorWorldA = rotationMatrixA * inverseScalingMatrixA * physicsA.GetInverseInertiaTensor() * inverseScalingMatrixA * Transposed(rotationMatrixA);
-            inertiaA = Cross(inverseInertiaTensorWorldA * Cross(relativeA, collision.normal), relativeA);
+            worldInverseInertiaTensorA = physicsA.GetCollider().GetWorldInverseInertiaTensor(transformA, physicsA.GetMass());
+            inertiaA = Cross(worldInverseInertiaTensorA * Cross(relativeA, collision.normal), relativeA);
         }
         if (!physicsB.IsStationary())
         {
-            Matrix3 rotationMatrixB = Matrix3(transformB.GetRotationMatrix());
-            Matrix3 inverseScalingMatrixB = Matrix3(transformB.GetInverseScalingMatrix());
-            inverseInertiaTensorWorldB = rotationMatrixB * inverseScalingMatrixB * physicsB.GetInverseInertiaTensor() * inverseScalingMatrixB * Transposed(rotationMatrixB);
-            inertiaB = Cross(inverseInertiaTensorWorldB * Cross(relativeB, collision.normal), relativeB);
+            worldInverseInertiaTensorB = physicsB.GetCollider().GetWorldInverseInertiaTensor(transformB, physicsB.GetMass());
+            inertiaB = Cross(worldInverseInertiaTensorB * Cross(relativeB, collision.normal), relativeB);
         }
         float angularEffect = Dot(inertiaA + inertiaB, collision.normal);
         
@@ -335,8 +336,8 @@ namespace Engine
         if (!physicsB.IsStationary()) physicsB.ApplyLinearImpulse(impulse);
         
         // Apply angular impulses.
-        if (!physicsA.IsStationary()) physicsA.ApplyAngularImpulse(Cross(relativeA, -impulse), inverseInertiaTensorWorldA);
-        if (!physicsB.IsStationary()) physicsB.ApplyAngularImpulse(Cross(relativeB, impulse), inverseInertiaTensorWorldB);
+        if (!physicsA.IsStationary()) physicsA.ApplyAngularImpulse(Cross(relativeA, -impulse), worldInverseInertiaTensorA);
+        if (!physicsB.IsStationary()) physicsB.ApplyAngularImpulse(Cross(relativeB, impulse), worldInverseInertiaTensorB);
         
         // Calculate and apply friction impulses.
         Vector3 tangent = relativeVelocity - velocityAlongNormal * collision.normal;
@@ -352,11 +353,11 @@ namespace Engine
             
             if (!physicsA.IsStationary())
             {
-                inertiaTangentA = Cross(inverseInertiaTensorWorldA * Cross(relativeA, tangent), relativeA);
+                inertiaTangentA = Cross(worldInverseInertiaTensorA * Cross(relativeA, tangent), relativeA);
             }
             if (!physicsB.IsStationary())
             {
-                inertiaTangentB = Cross(inverseInertiaTensorWorldB * Cross(relativeB, tangent), relativeB);
+                inertiaTangentB = Cross(worldInverseInertiaTensorB * Cross(relativeB, tangent), relativeB);
             }
             float angularEffectTangent = Dot(inertiaTangentA + inertiaTangentB, tangent);
             
@@ -384,8 +385,8 @@ namespace Engine
             if (!physicsB.IsStationary()) physicsB.ApplyLinearImpulse(frictionImpulse);
             
             // Apply angular friction impulses.
-            if (!physicsA.IsStationary()) physicsA.ApplyAngularImpulse(Cross(relativeA, -frictionImpulse), inverseInertiaTensorWorldA);
-            if (!physicsB.IsStationary()) physicsB.ApplyAngularImpulse(Cross(relativeB, frictionImpulse), inverseInertiaTensorWorldB);
+            if (!physicsA.IsStationary()) physicsA.ApplyAngularImpulse(Cross(relativeA, -frictionImpulse), worldInverseInertiaTensorA);
+            if (!physicsB.IsStationary()) physicsB.ApplyAngularImpulse(Cross(relativeB, frictionImpulse), worldInverseInertiaTensorB);
         }
         
         // Separate objects.
@@ -399,7 +400,7 @@ namespace Engine
 
     void Solver::Solve(World& world, float deltaTime)
     {
-        deltaTime = Clamp(deltaTime, 0.0f, 1.0f);
+        deltaTime = Clamp(deltaTime, 0.0f, 0.016f);
         auto view = world.View<Transform, Physics>();
         for (auto [handle, transform, physics] : view)
         {
@@ -407,10 +408,8 @@ namespace Engine
 
             physics.ApplyForce(m_Gravity * physics.GetMass() * Vector3(0.0f, 0.0f, -1.0f));
             
-            Matrix3 rotationMatrix = Matrix3(transform.GetRotationMatrix());
-            Matrix3 inverseScalingMatrix = Matrix3(transform.GetInverseScalingMatrix());
-            Matrix3 inverseInertiaTensorWorld = rotationMatrix * inverseScalingMatrix * physics.GetInverseInertiaTensor() * inverseScalingMatrix * Transposed(rotationMatrix);
-            physics.Integrate(deltaTime, inverseInertiaTensorWorld);
+            Matrix3 worldInverseInertiaTensor = physics.GetCollider().GetWorldInverseInertiaTensor(transform, physics.GetMass());
+            physics.Integrate(worldInverseInertiaTensor, deltaTime);
 
             transform.TranslateBy(physics.GetVelocity() * deltaTime);
             

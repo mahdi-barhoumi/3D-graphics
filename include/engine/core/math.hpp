@@ -65,6 +65,8 @@ namespace Engine
         inline constexpr Vector2& operator=(Vector2&& other) noexcept = default;
         inline constexpr ~Vector2() noexcept = default;
 
+        inline constexpr operator Matrix2() const noexcept;
+
         inline constexpr explicit Vector2(float scalar) noexcept;
         inline constexpr explicit Vector2(float x, float y) noexcept;
 
@@ -91,6 +93,7 @@ namespace Engine
     inline constexpr float LengthSquared(const Vector2& vector) noexcept;
     inline constexpr float Distance(const Vector2& a, const Vector2& b) noexcept;
     inline constexpr float DistanceSquared(const Vector2& a, const Vector2& b) noexcept;
+    inline constexpr Vector2 Clamp(const Vector2& vector, const Vector2& min, const Vector2& max) noexcept;
     inline constexpr Vector2 Hadamard(const Vector2& u, const Vector2& v) noexcept;
     inline constexpr Vector2 Normalized(const Vector2& vector) noexcept;
     inline constexpr Vector2& Normalize(Vector2& vector) noexcept;
@@ -118,6 +121,7 @@ namespace Engine
         inline constexpr explicit Vector3(float x, const Vector2& yz) noexcept;
 
         inline constexpr operator Vector2() const noexcept;
+        inline constexpr operator Matrix3() const noexcept;
         
         inline constexpr float operator[](size_t index) const noexcept;
         inline constexpr float& operator[](size_t index) noexcept;
@@ -142,6 +146,7 @@ namespace Engine
     inline constexpr float LengthSquared(const Vector3& vector) noexcept;
     inline constexpr float Distance(const Vector3& a, const Vector3& b) noexcept;
     inline constexpr float DistanceSquared(const Vector3& a, const Vector3& b) noexcept;
+    inline constexpr Vector3 Clamp(const Vector3& vector, const Vector3& min, const Vector3& max) noexcept;
     inline constexpr Vector3 Hadamard(const Vector3& u, const Vector3& v) noexcept;
     inline constexpr Vector3 Cross(const Vector3& u, const Vector3& v) noexcept;
     inline constexpr Vector3 Normalized(const Vector3& vector) noexcept;
@@ -177,6 +182,7 @@ namespace Engine
 
         inline constexpr operator Vector2() const noexcept;
         inline constexpr operator Vector3() const noexcept;
+        inline constexpr operator Matrix4() const noexcept;
 
         inline constexpr float operator[](size_t index) const noexcept;
         inline constexpr float& operator[](size_t index) noexcept;
@@ -201,6 +207,7 @@ namespace Engine
     inline constexpr float LengthSquared(const Vector4& vector) noexcept;
     inline constexpr float Distance(const Vector4& a, const Vector4& b) noexcept;
     inline constexpr float DistanceSquared(const Vector4& a, const Vector4& b) noexcept;
+    inline constexpr Vector4 Clamp(const Vector4& vector, const Vector4& min, const Vector4& max) noexcept;
     inline constexpr Vector4 Hadamard(const Vector4& u, const Vector4& v) noexcept;
     inline constexpr Vector4 Normalized(const Vector4& vector) noexcept;
     inline constexpr Vector4& Normalize(Vector4& vector) noexcept;
@@ -439,6 +446,8 @@ namespace Engine
         return *this;
     }
 
+    inline constexpr Vector2::operator Matrix2() const noexcept { return Matrix2(*this); }
+
     inline constexpr Vector2 operator+(const Vector2& u, const Vector2& v) noexcept { return Vector2(u.x + v.x, u.y + v.y); }
     inline constexpr Vector2 operator-(const Vector2& u, const Vector2& v) noexcept { return Vector2(u.x - v.x, u.y - v.y); }
     inline constexpr Vector2 operator-(const Vector2& vector) noexcept { return Vector2(-vector.x, -vector.y); }
@@ -463,6 +472,13 @@ namespace Engine
     inline constexpr float Distance(const Vector2& a, const Vector2& b) noexcept { return Length(a - b); }
     inline constexpr float DistanceSquared(const Vector2& a, const Vector2& b) noexcept { return LengthSquared(a - b); }
     inline constexpr Vector2 Hadamard(const Vector2& u, const Vector2& v) noexcept { return Vector2(u.x * v.x, u.y * v.y); }
+    inline constexpr Vector2 Clamp(const Vector2& vector, const Vector2& min, const Vector2& max) noexcept
+    {
+        return Vector2(
+            Clamp(vector.x, min.x, max.x),
+            Clamp(vector.y, min.y, max.y)
+        );
+    }
     inline constexpr Vector2 Normalized(const Vector2& vector) noexcept { return vector / Length(vector); }
     inline constexpr Vector2& Normalize(Vector2& vector) noexcept { return vector /= Length(vector); }
 
@@ -474,6 +490,7 @@ namespace Engine
     inline constexpr Vector3::Vector3(float x, const Vector2& yz) noexcept : x(x), y(yz.x), z(yz.y) {}
 
     inline constexpr Vector3::operator Vector2() const noexcept { return Vector2(x, y); }
+    inline constexpr Vector3::operator Matrix3() const noexcept { return Matrix3(*this); }
 
     inline constexpr float Vector3::operator[](size_t index) const noexcept
     {
@@ -539,6 +556,14 @@ namespace Engine
     inline constexpr float LengthSquared(const Vector3& vector) noexcept { return Dot(vector, vector); }
     inline constexpr float Distance(const Vector3& a, const Vector3& b) noexcept { return Length(a - b); }
     inline constexpr float DistanceSquared(const Vector3& a, const Vector3& b) noexcept { return LengthSquared(a - b); }
+    inline constexpr Vector3 Clamp(const Vector3& vector, const Vector3& min, const Vector3& max) noexcept
+    {
+        return Vector3(
+            Clamp(vector.x, min.x, max.x),
+            Clamp(vector.y, min.y, max.y),
+            Clamp(vector.z, min.z, max.z)
+        );
+    }
     inline constexpr Vector3 Hadamard(const Vector3& u, const Vector3& v) noexcept { return Vector3(u.x * v.x, u.y * v.y, u.z * v.z); }
     inline constexpr Vector3 Cross(const Vector3& u, const Vector3& v) noexcept { return Vector3(u.y * v.z - u.z * v.y, u.z * v.x - u.x * v.z, u.x * v.y - u.y * v.x); }
     inline constexpr Vector3 Normalized(const Vector3& vector) noexcept { return vector / Length(vector); }
@@ -571,6 +596,7 @@ namespace Engine
 
     inline constexpr Vector4::operator Vector2() const noexcept { return Vector2(x, y); }
     inline constexpr Vector4::operator Vector3() const noexcept { return Vector3(x, y, z); }
+    inline constexpr Vector4::operator Matrix4() const noexcept { return Matrix4(*this); }
 
     inline constexpr float Vector4::operator[](size_t index) const noexcept
     {
@@ -641,6 +667,15 @@ namespace Engine
     inline constexpr float LengthSquared(const Vector4& vector) noexcept { return Dot(vector, vector); }
     inline constexpr float Distance(const Vector4& a, const Vector4& b) noexcept { return Length(a - b); }
     inline constexpr float DistanceSquared(const Vector4& a, const Vector4& b) noexcept { return LengthSquared(a - b); }
+    inline constexpr Vector4 Clamp(const Vector4& vector, const Vector4& min, const Vector4& max) noexcept
+    {
+        return Vector4(
+            Clamp(vector.x, min.x, max.x),
+            Clamp(vector.y, min.y, max.y),
+            Clamp(vector.z, min.z, max.z),
+            Clamp(vector.w, min.w, max.w)
+        );
+    }
     inline constexpr Vector4 Hadamard(const Vector4& u, const Vector4& v) noexcept { return Vector4(u.x * v.x, u.y * v.y, u.z * v.z, u.w * v.w); }
     inline constexpr Vector4 Normalized(const Vector4& vector) noexcept { return vector / Length(vector); }
     inline constexpr Vector4& Normalize(Vector4& vector) noexcept { return vector /= Length(vector); }

@@ -21,7 +21,7 @@ using namespace Engine;
 
 int main(void)
 {
-    World world;
+    World world = World();
     Window window = Window(1600, 900);
     Renderer renderer = Renderer();
     Solver solver = Solver();
@@ -30,31 +30,26 @@ int main(void)
     {
         Object camera = world.Create();
         Transform transform;
-        transform.TranslateTo(0, -10, 5);
-        camera.Add<Transform>(transform);
-        camera.Add<Camera>(Camera());
+        camera.Add<Transform>(Vector3(0.0f, -10.0f, 5.0f));
+        camera.Add<Camera>();
         world.SetActiveCamera(camera);
     }
 
     {
         Object surface = world.Create();
-        Transform surfaceTransform = Transform();
-        surface.Add<Transform>(surfaceTransform);
-        surface.Add<Mesh>(Mesh("./assets/meshes/surface.obj"));
-        surface.Add<Texture>(Texture("./assets/textures/stone.png"));
-        surface.Add<Physics>(Physics(PlaneCollider(1000), true));
+        surface.Add<Transform>();
+        surface.Add<Mesh>("./assets/meshes/surface.obj");
+        surface.Add<Texture>("./assets/textures/stone.png");
+        surface.Add<Physics>(BoxCollider(1000.0f, 1000.0f, 0.0f), true);
     }
 
     {
         Object cube = world.Create();
         Transform cubeTransform;
-        cubeTransform.TranslateTo(5, 5, 20);
-        cubeTransform.ScaleTo(2, 2, 2);
-        cubeTransform.RotateBy(Radians(40.0f), Radians(15.0f), 0);
-        cube.Add<Transform>(cubeTransform);
-        cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
-        cube.Add<Texture>(Texture("./assets/textures/dirt.png"));
-        cube.Add<Physics>(Physics(CubeCollider(2), 4.0f));
+        cube.Add<Transform>(Vector3(5.0f, 5.0f, 20.0f), Vector3(1.0f, 2.0f, 2.0f), Quaternion(Radians(40.0f), Radians(15.0f), 0.0f));
+        cube.Add<Mesh>("./assets/meshes/cube.obj");
+        cube.Add<Texture>("./assets/textures/dirt.png");
+        cube.Add<Physics>(BoxCollider(2.0f), 4.0f);
         cube.Add<Controllable>();
     }
 
@@ -63,12 +58,10 @@ int main(void)
         for (int j = 0; j < 5; ++j)
         {
             Object cube = world.Create();
-            Transform cubeTransform;
-            cubeTransform.TranslateTo(2 * i - 10,  2 * j - 10, 20.0f);
-            cube.Add<Transform>(cubeTransform);
-            cube.Add<Mesh>(Mesh("./assets/meshes/cube.obj"));
-            cube.Add<Texture>(Texture("./assets/textures/wood.png"));
-            cube.Add<Physics>(Physics(CubeCollider(2)));
+            cube.Add<Transform>(Vector3(2.0f * i - 10.0f,  2.0f * j - 10.0f, 20.0f));
+            cube.Add<Mesh>("./assets/meshes/cube.obj");
+            cube.Add<Texture>("./assets/textures/wood.png");
+            cube.Add<Physics>(BoxCollider(2.0f));
         }
     }
 
@@ -77,12 +70,10 @@ int main(void)
         for (int j = 0; j < 5; ++j)
         {
             Object sphere = world.Create();
-            Transform sphereTransform;
-            sphereTransform.TranslateTo(2 * i - 10,  2 * j - 10, 10.0f);
-            sphere.Add<Transform>(sphereTransform);
-            sphere.Add<Mesh>(Mesh("./assets/meshes/sphere.obj"));
-            sphere.Add<Texture>(Texture("./assets/textures/wood.png"));
-            sphere.Add<Physics>(Physics(SphereCollider(1)));
+            sphere.Add<Transform>(Vector3(2.0f * i - 10.0f,  2.0f * j - 10.0f, 10.0f), Vector3(1.0f, 2.0f, 2.0f));
+            sphere.Add<Mesh>("./assets/meshes/sphere.obj");
+            sphere.Add<Texture>("./assets/textures/wood.png");
+            sphere.Add<Physics>(SphereCollider(1));
         }
     }
 

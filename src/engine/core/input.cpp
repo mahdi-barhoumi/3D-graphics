@@ -31,8 +31,8 @@ namespace Engine
             if (window.IsKeyPressed(Key::Q) || window.IsKeyHeld(Key::Q)) cameraTransform.TranslateBy(Vector3(-right, 0.0f));
             if (window.IsKeyPressed(Key::E) || window.IsKeyHeld(Key::E)) camera.Roll(90.0f * deltaTime);
             if (window.IsKeyPressed(Key::A) || window.IsKeyHeld(Key::A)) camera.Roll(-90.0f * deltaTime);
-            if (window.IsKeyPressed(Key::LeftShift) || window.IsKeyHeld(Key::LeftShift)) cameraTransform.TranslateBy(0.0f, 0.0f, 10.0f * deltaTime);
-            if (window.IsKeyPressed(Key::LeftControl) || window.IsKeyHeld(Key::LeftControl)) cameraTransform.TranslateBy(0.0f, 0.0f, -10.0f * deltaTime);
+            if (window.IsKeyPressed(Key::LeftShift) || window.IsKeyHeld(Key::LeftShift)) cameraTransform.TranslateBy(Vector3(0.0f, 0.0f, 10.0f * deltaTime));
+            if (window.IsKeyPressed(Key::LeftControl) || window.IsKeyHeld(Key::LeftControl)) cameraTransform.TranslateBy(Vector3(0.0f, 0.0f, -10.0f * deltaTime));
 
             CursorMovement movement = window.GetCursorMovement();
             camera.Pan(movement.dx * -50.0f);

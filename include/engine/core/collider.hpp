@@ -10,10 +10,7 @@ namespace Engine
 
         enum class Shape
         {
-            Unknown,
-            Cube,
-            Plane,
-            Rectangle,
+            Box,
             Sphere,
             Capsule,
             Mesh
@@ -21,51 +18,39 @@ namespace Engine
 
         Collider() = default;
         ~Collider() = default;
-        virtual Matrix3 GetInertiaTensor(float mass) const = 0;
-        virtual Matrix3 GetInverseInertiaTensor(float mass) const final;
-        virtual Vector3 GetSupport(const Vector3& direction) const = 0;
+        
+        virtual Shape GetShape() const final;
+        virtual Vector3 GetLocalSupport(const Vector3& direction) const = 0;
         virtual Vector3 GetWorldSupport(const Transform& transform, const Vector3& direction) const final;
+        virtual Vector3 GetLocalInertiaTensor(const Vector3& scale, float mass) const = 0;
+        virtual Vector3 GetLocalInverseInertiaTensor(const Vector3& scale, float mass) const final;
+        virtual Matrix3 GetWorldInertiaTensor(const Transform& transform, float mass) const final;
+        virtual Matrix3 GetWorldInverseInertiaTensor(const Transform& transform, float mass) const final;
         
         protected:
 
-        Shape m_Shape = Shape::Unknown;
+        Shape m_Shape;
 
     };
 
     template <typename T>
     concept ColliderConcept = std::derived_from<T, Collider>;
 
-    class CubeCollider : public Collider
+    class BoxCollider : public Collider
     {
         private:
         
-        float m_HalfLength = 0.5;
+        Vector3 m_HalfExtents = Vector3(0.5f);
         
         public:
         
-        CubeCollider() = default;
-        CubeCollider(float length);
-        ~CubeCollider() = default;
+        BoxCollider();
+        BoxCollider(float extent);
+        BoxCollider(float width, float depth, float height);
+        ~BoxCollider() = default;
 
-        Matrix3 GetInertiaTensor(float mass) const override;
-        Vector3 GetSupport(const Vector3& direction) const override;
-
-    };
-
-    class PlaneCollider : public Collider
-    {
-        private:
-        
-        float m_HalfLength = 0.5;
-        
-        public:
-        
-        PlaneCollider() = default;
-        PlaneCollider(float length);
-        ~PlaneCollider() = default;
-
-        Matrix3 GetInertiaTensor(float mass) const override;
-        Vector3 GetSupport(const Vector3& direction) const override;
+        Vector3 GetLocalSupport(const Vector3& direction) const override;
+        Vector3 GetLocalInertiaTensor(const Vector3& scale, float mass) const override;
 
     };
 
@@ -73,7 +58,7 @@ namespace Engine
     {
         private:
         
-        float m_Radius = 1;
+        float m_Radius = 1.0f;
         
         public:
         
@@ -81,8 +66,8 @@ namespace Engine
         SphereCollider(float radius);
         ~SphereCollider() = default;
 
-        Matrix3 GetInertiaTensor(float mass) const override;
-        Vector3 GetSupport(const Vector3& direction) const override;
+        Vector3 GetLocalSupport(const Vector3& direction) const override;
+        Vector3 GetLocalInertiaTensor(const Vector3& scale, float mass) const override;
 
     };
 }

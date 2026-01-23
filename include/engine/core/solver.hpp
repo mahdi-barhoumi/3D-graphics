@@ -77,18 +77,15 @@ namespace Engine
         static constexpr size_t s_MaxEPAIterations = 64;
 
         Support GetSupport(const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB, Vector3 direction);
+        inline Vector3 ConvertToBarycentric(const Vector3& point, const Vector3& a, const Vector3& b, const Vector3& c);
+        inline bool SameDirection(const Vector3& u, const Vector3& v);
 
         CollisionInfo GJK(const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB);
         bool NextSimplex(Simplex& simplex, Vector3& direction);
         bool Line(Simplex& simplex, Vector3& direction);
         bool Triangle(Simplex& simplex, Vector3& direction);
         bool Tetrahedron(Simplex& simplex, Vector3& direction);
-
         CollisionInfo EPA(const Simplex& simplex, const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB);
-        void AddUniqueEdge(std::vector<std::pair<size_t, size_t>>& edges, size_t a, size_t b);
-
-        inline bool SameDirection(const Vector3& u, const Vector3& v);
-        inline Vector3 ConvertToBarycentric(const Vector3& point, const Vector3& a, const Vector3& b, const Vector3& c);
 
         void ResolveCollision(Physics& physicsA, Transform& transformA, Physics& physicsB, Transform& transformB, const CollisionInfo& collision);
 

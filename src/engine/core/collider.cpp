@@ -2,60 +2,60 @@
 
 namespace Engine
 {
+    Collider::Shape Collider::GetShape() const { return m_Shape; }
     Vector3 Collider::GetWorldSupport(const Transform& transform, const Vector3& direction) const
     {
-        Vector3 localDirection = transform.GetInverseWorldMatrix() * Vector4(direction, 0.0f);
-        return transform.GetWorldMatrix() * Vector4(GetSupport(localDirection), 1.0f);
+        Vector3 localDirection = transform.GetInverseWorldMatrix() * direction;
+        return transform.GetWorldMatrix() * Vector4(GetLocalSupport(localDirection), 1.0f);
     }
-    Matrix3 Collider::GetInverseInertiaTensor(float mass) const { return Inversed(GetInertiaTensor(mass)); }
-
-    CubeCollider::CubeCollider(float length) : m_HalfLength(length * 0.5) { m_Shape = Shape::Cube; }
-    Vector3 CubeCollider::GetSupport(const Vector3& direction) const
+    Vector3 Collider::GetLocalInverseInertiaTensor(const Vector3& scale, float mass) const
     {
-        return Vector3(
-            (direction.x >= 0) ? m_HalfLength : -m_HalfLength,
-            (direction.y >= 0) ? m_HalfLength : -m_HalfLength,
-            (direction.z >= 0) ? m_HalfLength : -m_HalfLength
-        );
+        const Vector3 tensor = GetLocalInertiaTensor(scale, mass);
+        return Vector3(1.0f / tensor.x, 1.0f / tensor.y, 1.0f / tensor.z);
     }
-    Matrix3 CubeCollider::GetInertiaTensor(float mass) const
+    Matrix3 Collider::GetWorldInertiaTensor(const Transform& transform, float mass) const
     {
-        float i = mass * m_HalfLength * m_HalfLength * 2.0f / 3.0f;
-        return Matrix3(
-               i, 0.0f, 0.0f,
-            0.0f,    i, 0.0f,
-            0.0f, 0.0f,    i
-        );
+        const Matrix3 rotationMatrix = transform.GetRotationMatrix();
+        return rotationMatrix * Matrix3(GetLocalInertiaTensor(transform.GetScale(), mass)) * Transposed(rotationMatrix);
+    }
+    Matrix3 Collider::GetWorldInverseInertiaTensor(const Transform& transform, float mass) const
+    {
+        Matrix3 rotationMatrix = transform.GetRotationMatrix();
+        return rotationMatrix * Matrix3(GetLocalInverseInertiaTensor(transform.GetScale(), mass)) * Transposed(rotationMatrix);
     }
 
-    PlaneCollider::PlaneCollider(float length) : m_HalfLength(length * 0.5) { m_Shape = Shape::Plane; }
-    Vector3 PlaneCollider::GetSupport(const Vector3& direction) const
+    BoxCollider::BoxCollider() { m_Shape = Shape::Box; }
+    BoxCollider::BoxCollider(float length) : m_HalfExtents(0.5f * length) { m_Shape = Shape::Box; }
+    BoxCollider::BoxCollider(float width, float depth, float height) : m_HalfExtents(0.5f * width, 0.5f * depth, 0.5f * height) { m_Shape = Shape::Box; }
+    Vector3 BoxCollider::GetLocalSupport(const Vector3& direction) const
     {
         return Vector3(
-            (direction.x >= 0) ? m_HalfLength : -m_HalfLength,
-            (direction.y >= 0) ? m_HalfLength : -m_HalfLength,
-            0.0f
+            (direction.x >= 0) ? m_HalfExtents.x : -m_HalfExtents.x,
+            (direction.y >= 0) ? m_HalfExtents.y : -m_HalfExtents.y,
+            (direction.z >= 0) ? m_HalfExtents.z : -m_HalfExtents.z
         );
     }
-    Matrix3 PlaneCollider::GetInertiaTensor(float mass) const
+    Vector3 BoxCollider::GetLocalInertiaTensor(const Vector3& scale, float mass) const
     {
-        float ixy = (mass * m_HalfLength * m_HalfLength) / 3.0f;
-        return Matrix3(
-             ixy,    0.0f,          0.0f,
-            0.0f,     ixy,          0.0f,
-            0.0f,    0.0f,    2.0f * ixy
+        const Vector3 h = Hadamard(m_HalfExtents, scale);
+        float common = mass / 3.0f;
+        return Vector3(
+            common * (h.y * h.y + h.z * h.z),
+            common * (h.x * h.x + h.z * h.z),
+            common * (h.x * h.x + h.y * h.y)
         );
     }
 
     SphereCollider::SphereCollider(float radius) : m_Radius(radius) { m_Shape = Shape::Sphere; }
-    Vector3 SphereCollider::GetSupport(const Vector3& direction) const { return Normalized(direction) * m_Radius; }
-    Matrix3 SphereCollider::GetInertiaTensor(float mass) const
+    Vector3 SphereCollider::GetLocalSupport(const Vector3& direction) const { return Normalized(direction) * m_Radius; }
+    Vector3 SphereCollider::GetLocalInertiaTensor(const Vector3& scale, float mass) const
     {
-        float i = (2.0f / 5.0f) * mass * m_Radius * m_Radius;
-        return Matrix3(
-            i, 0, 0,
-            0, i, 0,
-            0, 0, i
-        );
+        Vector3 h = m_Radius * scale;
+        h = Hadamard(h, h);
+        const float fraction = mass / 5.0f;
+        const float ix = fraction * (h.y + h.z);
+        const float iy = fraction * (h.x + h.z);
+        const float iz = fraction * (h.x + h.y);
+        return Vector3(ix, iy, iz);
     }
 }

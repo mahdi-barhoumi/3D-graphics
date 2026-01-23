@@ -19,7 +19,7 @@ namespace Engine
         std::vector<unsigned int> indices {0, 1, 2, 3, 4, 5};
         m_AxisMesh = Mesh(vertices, indices, Mesh::Primitive::Lines);
 
-        m_LightTransform.RotateBy(Radians(15.0f), 0.0f, 0.0f);
+        m_LightTransform.RotateTo(Quaternion(Radians(15.0f), 0.0f, 0.0f));
 
         m_ShadowMap.SetWrap(Texture::Wrap::ClampToBorder);
         m_ShadowMap.SetBorder(1.0f);
