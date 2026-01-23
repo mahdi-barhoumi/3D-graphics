@@ -311,7 +311,6 @@ namespace Engine
         Matrix3 worldInverseInertiaTensorA = Matrix3(0.0f);
         Matrix3 worldInverseInertiaTensorB = Matrix3(0.0f);
         
-        // TODO: This is wrong and bad (incorrect inertia scaling calculations).
         if (!physicsA.IsStationary())
         {
             worldInverseInertiaTensorA = physicsA.GetCollider().GetWorldInverseInertiaTensor(transformA, physicsA.GetMass());
