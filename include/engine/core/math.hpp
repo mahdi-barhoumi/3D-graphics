@@ -8,8 +8,13 @@ namespace Engine
 {
     // Constants
 
-    inline constexpr float E = std::numbers::e;
-    inline constexpr float Pi = std::numbers::pi;
+    namespace Constants
+    {
+        inline constexpr float E = std::numbers::e;
+        inline constexpr float Pi = std::numbers::pi;
+        inline constexpr float Epsilon = std::numeric_limits<float>::epsilon();
+        inline constexpr float Infinity = std::numeric_limits<float>::infinity();
+    }
 
     // Standard math functions
 

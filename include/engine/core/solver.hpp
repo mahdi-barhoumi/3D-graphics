@@ -87,7 +87,7 @@ namespace Engine
         bool Tetrahedron(Simplex& simplex, Vector3& direction);
         CollisionInfo EPA(const Simplex& simplex, const Collider& colliderA, const Transform& transformA, const Collider& colliderB, const Transform& transformB);
 
-        void ResolveCollision(Physics& physicsA, Transform& transformA, Physics& physicsB, Transform& transformB, const CollisionInfo& collision);
+        void ResolveCollision(const CollisionInfo& collision, Transform& transformA, Physics& physicsA, const Collider& colliderA, Transform& transformB, Physics& physicsB, const Collider& colliderB) const;
 
         public:
 

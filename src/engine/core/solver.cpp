@@ -2,9 +2,6 @@
 #include <vector>
 #include <engine/core/solver.hpp>
 
-// #include <string>
-// #include <iostream>
-
 namespace Engine
 {
     Solver::Solver(float gravity) : m_Gravity(gravity) {}
@@ -289,7 +286,7 @@ namespace Engine
         return info;
     }
 
-    void Solver::ResolveCollision(Physics& physicsA, Transform& transformA, Physics& physicsB, Transform& transformB, const CollisionInfo& collision)
+    void Solver::ResolveCollision(const CollisionInfo& collision, Transform& transformA, Physics& physicsA, const Collider& colliderA, Transform& transformB, Physics& physicsB, const Collider& colliderB) const
     {
         // Calculate relative positions from center of mass to contact point.
         Vector3 relativeA = collision.contactPointA - transformA.GetPosition();
@@ -311,14 +308,14 @@ namespace Engine
         Matrix3 worldInverseInertiaTensorA = Matrix3(0.0f);
         Matrix3 worldInverseInertiaTensorB = Matrix3(0.0f);
         
-        if (!physicsA.IsStationary())
+        if (physicsA.IsDynamic())
         {
-            worldInverseInertiaTensorA = physicsA.GetCollider().GetWorldInverseInertiaTensor(transformA, physicsA.GetMass());
+            worldInverseInertiaTensorA = colliderA.GetWorldInverseInertiaTensor(transformA, physicsA.GetMass());
             inertiaA = Cross(worldInverseInertiaTensorA * Cross(relativeA, collision.normal), relativeA);
         }
-        if (!physicsB.IsStationary())
+        if (physicsB.IsDynamic())
         {
-            worldInverseInertiaTensorB = physicsB.GetCollider().GetWorldInverseInertiaTensor(transformB, physicsB.GetMass());
+            worldInverseInertiaTensorB = colliderB.GetWorldInverseInertiaTensor(transformB, physicsB.GetMass());
             inertiaB = Cross(worldInverseInertiaTensorB * Cross(relativeB, collision.normal), relativeB);
         }
         float angularEffect = Dot(inertiaA + inertiaB, collision.normal);
@@ -331,12 +328,12 @@ namespace Engine
         Vector3 impulse = j * collision.normal;
         
         // Apply linear impulses.
-        if (!physicsA.IsStationary()) physicsA.ApplyLinearImpulse(-impulse);
-        if (!physicsB.IsStationary()) physicsB.ApplyLinearImpulse(impulse);
+        if (physicsA.IsDynamic()) physicsA.ApplyLinearImpulse(-impulse);
+        if (physicsB.IsDynamic()) physicsB.ApplyLinearImpulse(impulse);
         
         // Apply angular impulses.
-        if (!physicsA.IsStationary()) physicsA.ApplyAngularImpulse(Cross(relativeA, -impulse), worldInverseInertiaTensorA);
-        if (!physicsB.IsStationary()) physicsB.ApplyAngularImpulse(Cross(relativeB, impulse), worldInverseInertiaTensorB);
+        if (physicsA.IsDynamic()) physicsA.ApplyAngularImpulse(Cross(relativeA, -impulse), worldInverseInertiaTensorA);
+        if (physicsB.IsDynamic()) physicsB.ApplyAngularImpulse(Cross(relativeB, impulse), worldInverseInertiaTensorB);
         
         // Calculate and apply friction impulses.
         Vector3 tangent = relativeVelocity - velocityAlongNormal * collision.normal;
@@ -350,14 +347,8 @@ namespace Engine
             Vector3 inertiaTangentA = Vector3(0.0f);
             Vector3 inertiaTangentB = Vector3(0.0f);
             
-            if (!physicsA.IsStationary())
-            {
-                inertiaTangentA = Cross(worldInverseInertiaTensorA * Cross(relativeA, tangent), relativeA);
-            }
-            if (!physicsB.IsStationary())
-            {
-                inertiaTangentB = Cross(worldInverseInertiaTensorB * Cross(relativeB, tangent), relativeB);
-            }
+            if (physicsA.IsDynamic()) inertiaTangentA = Cross(worldInverseInertiaTensorA * Cross(relativeA, tangent), relativeA);
+            if (physicsB.IsDynamic()) inertiaTangentB = Cross(worldInverseInertiaTensorB * Cross(relativeB, tangent), relativeB);
             float angularEffectTangent = Dot(inertiaTangentA + inertiaTangentB, tangent);
             
             // Calculate friction impulse magnitude.
@@ -380,35 +371,35 @@ namespace Engine
             }
             
             // Apply friction impulses.
-            if (!physicsA.IsStationary()) physicsA.ApplyLinearImpulse(-frictionImpulse);
-            if (!physicsB.IsStationary()) physicsB.ApplyLinearImpulse(frictionImpulse);
+            if (physicsA.IsDynamic()) physicsA.ApplyLinearImpulse(-frictionImpulse);
+            if (physicsB.IsDynamic()) physicsB.ApplyLinearImpulse(frictionImpulse);
             
             // Apply angular friction impulses.
-            if (!physicsA.IsStationary()) physicsA.ApplyAngularImpulse(Cross(relativeA, -frictionImpulse), worldInverseInertiaTensorA);
-            if (!physicsB.IsStationary()) physicsB.ApplyAngularImpulse(Cross(relativeB, frictionImpulse), worldInverseInertiaTensorB);
+            if (physicsA.IsDynamic()) physicsA.ApplyAngularImpulse(Cross(relativeA, -frictionImpulse), worldInverseInertiaTensorA);
+            if (physicsB.IsDynamic()) physicsB.ApplyAngularImpulse(Cross(relativeB, frictionImpulse), worldInverseInertiaTensorB);
         }
         
         // Separate objects.
         float totalInverseMass = physicsA.GetInverseMass() + physicsB.GetInverseMass();
         if (totalInverseMass > 0)
         {
-            if (!physicsA.IsStationary()) transformA.TranslateBy(-collision.normal * collision.depth * (physicsA.GetInverseMass() / totalInverseMass));
-            if (!physicsB.IsStationary()) transformB.TranslateBy(collision.normal * collision.depth * (physicsB.GetInverseMass() / totalInverseMass));
+            if (physicsA.IsDynamic()) transformA.TranslateBy(-collision.normal * collision.depth * (physicsA.GetInverseMass() / totalInverseMass));
+            if (physicsB.IsDynamic()) transformB.TranslateBy(collision.normal * collision.depth * (physicsB.GetInverseMass() / totalInverseMass));
         }
     }
 
     void Solver::Solve(World& world, float deltaTime)
     {
-        deltaTime = Clamp(deltaTime, 0.0f, 0.016f);
-        auto view = world.View<Transform, Physics>();
-        for (auto [handle, transform, physics] : view)
+        deltaTime = Clamp(deltaTime, 0.0f, 0.05f);
+        auto view = world.View<Transform, Collider, Physics>();
+
+        for (auto [handle, transform, collider, physics] : view)
         {
             if (physics.IsStationary()) continue;
 
             physics.ApplyForce(m_Gravity * physics.GetMass() * Vector3(0.0f, 0.0f, -1.0f));
             
-            Matrix3 worldInverseInertiaTensor = physics.GetCollider().GetWorldInverseInertiaTensor(transform, physics.GetMass());
-            physics.Integrate(worldInverseInertiaTensor, deltaTime);
+            physics.Integrate(collider.GetWorldInverseInertiaTensor(transform, physics.GetMass()), deltaTime);
 
             transform.TranslateBy(physics.GetVelocity() * deltaTime);
             
@@ -422,19 +413,17 @@ namespace Engine
             
             physics.ResetAccumulators();
         }
-        for (auto [handleA, transformA, physicsA] : view)
+
+        for (auto [handleA, transformA, colliderA, physicsA] : view)
         {
-            for (auto [handleB, transformB, physicsB] : view)
+            for (auto [handleB, transformB, colliderB, physicsB] : view)
             {
                 if (handleA <= handleB) continue;
-                if (physicsA.IsStationary() && physicsB.IsStationary()) continue; 
-                CollisionInfo collision = GJK(physicsA.GetCollider(), transformA, physicsB.GetCollider(), transformB);
-                if (collision) ResolveCollision(physicsA, transformA, physicsB, transformB, collision);
-                // else
-                // {
-                //     if (collision.status == CollisionInfo::Status::GJKFailed) std::cout << std::format("GJK failed between object {} and {}\n", (int) handleA, (int) handleB);
-                //     else if (collision.status == CollisionInfo::Status::EPAFailed) std::cout << std::format("EPA failed between object {} and {}\n", (int) handleA, (int) handleB);
-                // }
+                if (physicsA.IsStationary() && physicsB.IsStationary()) continue;
+
+                CollisionInfo collision = GJK(colliderA, transformA, colliderB, transformB);
+
+                if (collision) ResolveCollision(collision, transformA, physicsA, colliderA, transformB, physicsB, colliderB);
             }
         }
     }

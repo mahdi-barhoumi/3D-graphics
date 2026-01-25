@@ -42,7 +42,8 @@ int main(void)
         surface.Add<Transform>();
         surface.Add<Mesh>("./assets/meshes/surface.obj");
         surface.Add<Texture>("./assets/textures/stone.png");
-        surface.Add<Physics>(BoxCollider(1000.0f, 1000.0f, 0.0f), true);
+        surface.Add<Collider>(BoxCollider(1000.0f, 1000.0f, 0.0f));
+        surface.Add<Physics>(Physics::Type::Stationary);
     }
 
     {
@@ -51,7 +52,8 @@ int main(void)
         cube.Add<Transform>(Vector3(5.0f, 5.0f, 20.0f), Vector3(1.0f, 2.0f, 2.0f), Quaternion(Radians(40.0f), Radians(15.0f), 0.0f));
         cube.Add<Mesh>("./assets/meshes/cube.obj");
         cube.Add<Texture>("./assets/textures/dirt.png");
-        cube.Add<Physics>(BoxCollider(2.0f), 4.0f);
+        cube.Add<Collider>(BoxCollider(2.0f));
+        cube.Add<Physics>(4.0f);
         cube.Add<Controllable>();
     }
 
@@ -63,7 +65,8 @@ int main(void)
             cube.Add<Transform>(Vector3(2.0f * i - 10.0f,  2.0f * j - 10.0f, 20.0f));
             cube.Add<Mesh>("./assets/meshes/cube.obj");
             cube.Add<Texture>("./assets/textures/wood.png");
-            cube.Add<Physics>(BoxCollider(2.0f));
+            cube.Add<Collider>(BoxCollider(2.0f));
+            cube.Add<Physics>();
         }
     }
 
@@ -75,7 +78,8 @@ int main(void)
             sphere.Add<Transform>(Vector3(2.0f * i - 10.0f,  2.0f * j - 10.0f, 10.0f), Vector3(1.0f, 2.0f, 2.0f));
             sphere.Add<Mesh>("./assets/meshes/sphere.obj");
             sphere.Add<Texture>("./assets/textures/wood.png");
-            sphere.Add<Physics>(SphereCollider(1));
+            sphere.Add<Collider>(SphereCollider(1));
+            sphere.Add<Physics>();
         }
     }
 
