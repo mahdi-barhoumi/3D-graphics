@@ -1,5 +1,6 @@
 #include <format>
 #include <string>
+#include <vector>
 #include <chrono>
 #include <iostream>
 #include <engine/core/mesh.hpp>
@@ -37,6 +38,27 @@ int main(void)
         world.SetActiveCamera(camera);
     }
 
+    // {
+    //     std::vector<VertexP3C4> vertices;
+    //     std::vector<unsigned int> indices;
+    //     vertices.push_back(VertexP3C4{
+    //         .position = Vector3(-5.0f, 0.0f, 0.0f),
+    //         .color = Vector4(1.0f, 0.0f, 0.0f, 1.0f)
+    //     });
+    //     vertices.push_back(VertexP3C4{
+    //         .position = Vector3(5.0f, 0.0f, 0.0f),
+    //         .color = Vector4(1.0f, 0.0f, 0.0f, 1.0f)
+    //     });
+    //     indices.push_back(0);
+    //     indices.push_back(1);
+
+    //     Object ray = world.Create();
+    //     ray.Add<Transform>(Vector3(-5.0f, 0.0f, 30.0f));
+    //     ray.Add<Mesh>(vertices, indices, Mesh::Primitive::Lines);
+    //     ray.Add<Collider>(BoxCollider(10.0f, 0.1f, 0.1f));
+    //     ray.Add<Physics>(Physics::Type::Dynamic);
+    // }
+
     {
         Object surface = world.Create();
         surface.Add<Transform>();
@@ -49,7 +71,7 @@ int main(void)
     {
         Object cube = world.Create();
         Transform cubeTransform;
-        cube.Add<Transform>(Vector3(5.0f, 5.0f, 20.0f), Vector3(1.0f, 2.0f, 2.0f), Quaternion(Radians(40.0f), Radians(15.0f), 0.0f));
+        cube.Add<Transform>(Vector3(5.0f, 5.0f, 20.0f), Vector3(2.0f), Quaternion(Radians(40.0f), Radians(15.0f), 0.0f));
         cube.Add<Mesh>("./assets/meshes/cube.obj");
         cube.Add<Texture>("./assets/textures/dirt.png");
         cube.Add<Collider>(BoxCollider(2.0f));

@@ -49,18 +49,14 @@ namespace Engine
         Light m_Light = Light();
         Transform m_LightTransform = Transform();
 
-        inline void ClearDepth() const { glClear(GL_DEPTH_BUFFER_BIT); }
-        inline void ClearStencil() const { glClear(GL_STENCIL_BUFFER_BIT); }
-        inline void ClearColor(const Color& color) const
-        {
-            glClearColor(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-        }
-        inline void EnableDepthTesting() const { glEnable(GL_DEPTH_TEST); }
-        inline void DisableDepthTesting() const { glDisable(GL_DEPTH_TEST); }
-        inline void EnableFaceCulling() const { glEnable(GL_CULL_FACE); }
-        inline void DisableFaceCulling() const { glDisable(GL_CULL_FACE); }
-        inline void DepthTestFunction(DepthTest test) const { glDepthFunc(static_cast<GLenum>(test)); }
-
+        void ClearDepth() const;
+        void ClearStencil() const;
+        void ClearColor(const Color& color) const;
+        void EnableDepthTesting() const;
+        void DisableDepthTesting() const;
+        void EnableFaceCulling() const;
+        void DisableFaceCulling() const;
+        void DepthTestFunction(DepthTest test) const;
+        void SetLineWidth(float width) const;
     };
 }
