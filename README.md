@@ -11,10 +11,11 @@
 - [Build & Run](#build--run)
 - [Controls](#controls)
 - [Architecture & Key Components](#architecture--key-components)
-- [Examples](#examples)
+- [Examples](#examples--scene-construction-from-srcmaincpp)
 - [Assets](#assets)
-- [Dependencies](#dependencies)
-- [Contributing & License](#contributing--license)
+- [Dependencies & Bundled Libraries](#dependencies--bundled-libraries)
+- [Notes & Future Improvements](#notes--future-improvements)
+- [Getting Started](#getting-started)
 
 ---
 
