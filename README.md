@@ -20,6 +20,8 @@
 
 ## Overview ✅
 
+![Demo](demo.gif)
+
 This repository implements a small, self-contained 3D engine written in modern C++ (C++23). It includes:
 
 - A simple Entity-Component system (backed by entt)

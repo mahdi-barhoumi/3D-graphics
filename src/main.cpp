@@ -24,7 +24,7 @@ using namespace Engine;
 int main(void)
 {
     World world = World();
-    Window window = Window(1600, 900);
+    Window window = Window(1280, 720);
     Renderer renderer = Renderer();
     Solver solver = Solver();
     Input input = Input();
@@ -32,7 +32,7 @@ int main(void)
     {
         Object camera = world.Create();
         Transform transform;
-        camera.Add<Transform>(Vector3(0.0f, -10.0f, 5.0f));
+        camera.Add<Transform>(Vector3(0.0f, -20.0f, 10.0f));
         camera.Add<Camera>();
         camera.Add<Audio>("./assets/sounds/explosion.ogg");
         world.SetActiveCamera(camera);
