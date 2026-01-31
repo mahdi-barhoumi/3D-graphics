@@ -22,7 +22,7 @@
 
 ![Demo](demo.gif)
 
-This repository implements a small, self-contained 3D engine written in modern C++ (C++23). It includes:
+This repository implements a small, self-contained 3D engine written in modern C++ (C++26). It includes:
 
 - A custom Entity-Component system (via `Engine::World` and components)
 - Windowing and input handling (using GLFW)
@@ -203,7 +203,7 @@ This project bundles several headers and libraries under `include/` and `lib/` t
 ```
 
 **Compiler flags** include:
-- `-std=c++23` (C++23 standard)
+- `-std=c++26` (C++26 standard)
 - `-DGLEW_STATIC` (static GLEW linking)
 - `-DSTB_IMAGE_IMPLEMENTATION` (STB image loading)
 - `-DAL_LIBTYPE_STATIC` (static OpenAL linking)
