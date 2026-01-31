@@ -1,79 +1,37 @@
 #pragma once
+#include <vector>
+#include <string>
+#include <unordered_map>
 #include <engine/core/math.hpp>
+#include <engine/core/vertex.hpp>
 #include <engine/core/transform.hpp>
+#include <engine/core/component.hpp>
 
 namespace Engine
 {
-    class Collider
-    {
-        public:
-
-        enum class Shape
-        {
-            Unknown,
-            Cube,
-            Plane,
-            Rectangle,
-            Sphere,
-            Capsule,
-            Mesh
-        };
-
-        Collider() = default;
-        ~Collider() = default;
-        virtual Matrix3 GetInertiaTensor(float mass) const = 0;
-        virtual Matrix3 GetInverseInertiaTensor(float mass) const final;
-        virtual Vector3 GetSupport(const Vector3& direction) const = 0;
-        virtual Vector3 GetWorldSupport(const Transform& transform, const Vector3& direction) const final;
-        
-        protected:
-
-        Shape m_Shape = Shape::Unknown;
-
-    };
-
-    template <typename T>
-    concept ColliderConcept = std::derived_from<T, Collider>;
-
-    class CubeCollider : public Collider
+    class BoxCollider
     {
         private:
         
-        float m_HalfLength = 0.5;
+        Vector3 m_HalfExtents = Vector3(0.5f);
         
         public:
         
-        CubeCollider() = default;
-        CubeCollider(float length);
-        ~CubeCollider() = default;
+        BoxCollider() = default;
+        BoxCollider(float extent);
+        BoxCollider(float width, float depth, float height);
+        ~BoxCollider() = default;
 
-        Matrix3 GetInertiaTensor(float mass) const override;
-        Vector3 GetSupport(const Vector3& direction) const override;
-
-    };
-
-    class PlaneCollider : public Collider
-    {
-        private:
-        
-        float m_HalfLength = 0.5;
-        
-        public:
-        
-        PlaneCollider() = default;
-        PlaneCollider(float length);
-        ~PlaneCollider() = default;
-
-        Matrix3 GetInertiaTensor(float mass) const override;
-        Vector3 GetSupport(const Vector3& direction) const override;
+        Vector3 GetLocalSupport(const Vector3& direction) const;
+        Matrix3 GetLocalInertiaTensor(const Vector3& scale, float mass) const;
 
     };
 
-    class SphereCollider : public Collider
+    class SphereCollider
     {
         private:
         
-        float m_Radius = 1;
+        float m_Radius = 1.0f;
         
         public:
         
@@ -81,8 +39,82 @@ namespace Engine
         SphereCollider(float radius);
         ~SphereCollider() = default;
 
-        Matrix3 GetInertiaTensor(float mass) const override;
-        Vector3 GetSupport(const Vector3& direction) const override;
+        Vector3 GetLocalSupport(const Vector3& direction) const;
+        Matrix3 GetLocalInertiaTensor(const Vector3& scale, float mass) const;
+
+    };
+
+    class CapsuleCollider
+    {
+        private:
+        
+        float m_Radius = 1.0f;
+        float m_Length = 1.0f;
+        
+        public:
+        
+        CapsuleCollider() = default;
+        CapsuleCollider(float radius, float length);
+        ~CapsuleCollider() = default;
+
+        Vector3 GetLocalSupport(const Vector3& direction) const;
+        Matrix3 GetLocalInertiaTensor(const Vector3& scale, float mass) const;
+
+    };
+
+    class MeshCollider
+    {
+        private:
+        
+        
+        public:
+        
+        MeshCollider() = default;
+        MeshCollider(const std::string& path);
+        ~MeshCollider() = default;
+
+        Vector3 GetLocalSupport(const Vector3& direction) const;
+        Matrix3 GetLocalInertiaTensor(const Vector3& scale, float mass) const;
+
+    };
+
+    class Collider : public Component
+    {
+        public:
+
+        enum class Shape
+        {
+            Box,
+            Sphere,
+            Capsule,
+            Mesh
+        };
+
+        Collider() = delete;
+        Collider(const BoxCollider& collider);
+        Collider(const SphereCollider& collider);
+        Collider(const CapsuleCollider& collider);
+        Collider(const MeshCollider& collider);
+        ~Collider() = default;
+        
+        Shape GetShape() const;
+        Vector3 GetLocalSupport(const Vector3& direction) const;
+        Vector3 GetWorldSupport(const Transform& transform, const Vector3& direction) const;
+        Matrix3 GetLocalInertiaTensor(const Vector3& scale, float mass) const;
+        Matrix3 GetWorldInertiaTensor(const Transform& transform, float mass) const;
+        Matrix3 GetLocalInverseInertiaTensor(const Vector3& scale, float mass) const;
+        Matrix3 GetWorldInverseInertiaTensor(const Transform& transform, float mass) const;
+        
+        private:
+
+        Shape m_Shape;
+        union
+        {
+            BoxCollider m_Box;
+            SphereCollider m_Sphere;
+            CapsuleCollider m_Capsule;
+            MeshCollider m_Mesh;
+        };
 
     };
 }

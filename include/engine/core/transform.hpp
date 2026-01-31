@@ -8,14 +8,28 @@ namespace Engine
     {
         public:
 
-        Vector3 m_Scale = Vector3(1.0f);
         Vector3 m_Position = Vector3(0.0f);
+        Vector3 m_Scale = Vector3(1.0f);
         Quaternion m_Orientation = Quaternion(0.0f, 0.0f, 0.0f);
 
         public:
 
-        Vector3 GetScale() const;
+        Transform() = default;
+        Transform(const Vector3& position);
+        Transform(const Quaternion& orientation);
+        Transform(const Vector3& position, const Vector3& scale);
+        Transform(const Vector3& position, const Quaternion& orientation);
+        Transform(const Vector3& position, const Vector3& scale, const Quaternion& orientation);
+        Transform(const Transform& other) = default;
+        Transform(Transform&& other) = default;
+        Transform& operator=(const Transform& other) = default;
+        Transform& operator=(Transform&& other) = default;
+        ~Transform() = default;
+
         Vector3 GetPosition() const;
+        Vector3 GetInversePosition() const;
+        Vector3 GetScale() const;
+        Vector3 GetInverseScale() const;
         Quaternion GetOrientation() const;
         Quaternion GetInverseOrientation() const;
         Matrix4 GetScalingMatrix() const;
@@ -26,15 +40,13 @@ namespace Engine
         Matrix4 GetInverseTranslationMatrix() const;
         Matrix4 GetWorldMatrix() const;
         Matrix4 GetInverseWorldMatrix() const;
-        void RotateAround(const Vector3& vector, float degrees);
-        void RotateTo(float angleAroundX, float angleAroundY, float angleAroundZ);
-        void RotateBy(float deltaAngleAroundX, float deltaAngleAroundY, float deltaAngleAroundZ);
-        void ScaleTo(float scaleX, float scaleY, float scaleZ);
-        void ScaleBy(float scalarX, float scalarY, float scalarZ);
-        void TranslateTo(float x, float y, float z);
-        void TranslateBy(float deltaX, float deltaY, float deltaZ);
         void TranslateTo(const Vector3& position);
         void TranslateBy(const Vector3& delta);
+        void ScaleTo(const Vector3& scale);
+        void ScaleBy(const Vector3& delta);
+        void RotateTo(const Quaternion& orientation);
+        void RotateBy(const Quaternion& delta);
+        void RotateAround(const Vector3& axis, float radians);
 
     };
 }
