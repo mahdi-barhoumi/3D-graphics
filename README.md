@@ -25,7 +25,7 @@
 
 This repository implements a small, self-contained 3D engine written in modern C++ (C++26). It includes:
 
-- A custom Entity-Component system (via `Engine::World` and components)
+- An Entity-Component system (via `Engine::World` and components)
 - Windowing and input handling (using GLFW)
 - Audio support (using OpenAL)
 - Shader, Mesh, and Texture resource management
